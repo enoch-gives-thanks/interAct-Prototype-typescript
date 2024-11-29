@@ -1,5 +1,5 @@
 Vid: 
-https://www.youtube.com/watch?v=b8ZUb_Okxro
+https://youtu.be/b8ZUb_Okxro?si=V3PjMcxET8IrBNaW&t=1645
 
 Poe:
 https://poe.com/chat/2vyaou39qqu8tyd09z3
@@ -410,7 +410,7 @@ and go to browser
 Windows setup local mongodb 
 ```ts
 //...
-const MONGO_URL = 'mongodb://localhost:27017/';
+const MONGO_URL = 'mongodb://localhost:27017/interact';
 ```
 ```sh,bat
 pnpm add mongoose
@@ -741,7 +741,7 @@ import authentication from './authentication'; // ADD THIS LINE
 // import compression from 'compression';
 // import cors from 'cors';
 // import mongoose from 'mongoose';
-import router from 'router'; // ADD THIS LINE
+import router from './router'; // ADD THIS LINE
 
 // const app = express();
 
@@ -768,3 +768,25 @@ import router from 'router'; // ADD THIS LINE
 app.use('/', router()); // ADD THIS LINE
 ```
 ## test out registration in postman
+http://localhost:8080/auth/register
+
+{
+    "email": "abc@gmail.com",
+    "password": "wer234sfd",
+    "username": "interAct"
+}
+
+excepted return:
+
+{
+    "user": {
+        "username": "interAct",
+        "email": "abc@gmail.com",
+        "authentication": {
+            "password": "978eb94ad5e60c9ffcb2831c385d275a0225a18168c73ad7b8af7d2fc3d74012",
+            "salt": "LGbxwPdisavIBa6zG7uBo9jKMCpl52qjjiW7gcDoWdftq3Urw5TKnmhNvKqq/vI2tjxdIWADomr7o6BycNdWQjNzlaLJ6jamvTOv944X9jtR7McRBJwBcgtiPeBHS7Jy+VwRJIPYAZv02D80IBrXCzm3WJ7jQJCtZRN8Uj9nx2I="
+        },
+        "_id": "67498512ef98b90871cf583e",
+        "__v": 0
+    }
+}
