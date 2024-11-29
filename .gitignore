@@ -1,0 +1,98 @@
+# Node.js dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Build output
+/build
+/dist
+
+# React-specific artifacts
+/.next
+/out
+/.parcel-cache
+
+# Static files cache
+/cache
+*.cache
+
+# Test coverage
+/coverage
+
+# VSCode settings
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IDE files
+*.swp
+*.swo
+*.idea
+*.iml
+*.vscode
+.DS_Store
+Thumbs.db
+
+# MacOS system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Lint and formatting
+.eslintcache
+.stylelintcache
+.prettierignore
+.prettiercache
+
+# Parcel-bundler cache
+.cache/
+.parcel-cache/
+
+# Webpack and Rollup cache
+/.nyc_output
+/.sass-cache
+/.husky/_/
+
+# Storybook build artifacts
+storybook-static
+
+# Firebase and other cloud deployment
+.firebaserc
+.firebase/
+.firebasehosting.cache
+
+# Local files
+*.local
+
+# Optional npm cache directory
+.npm
+
+# Yarn Integrity
+.yarn-integrity
+
+# Next.js
+.next/
+out/
