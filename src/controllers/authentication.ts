@@ -2,19 +2,25 @@ import express from 'express';
 import { createUser, getUserByEmail } from '../db/users';
 import { authentication, random } from '../helpers';
 
-export const register = async (req:express.Request, res: express.Response) => {
+export const register = async (
+    req:express.Request, 
+    res: express.Response,
+    next: express.NextFunction // Add `next` to ensure it matches Express's handler type
+): Promise<void> => {
     try {
         // registration process
         const {email, password, username} = req.body // we define in user.ts
 
         if(!email || !password || !username){
-            return res.sendStatus(400);
+            res.status(400).json({ error: 'Missing required fields' });
+            return ;
         }
 
         const existingUser = await getUserByEmail(email);
 
         if(existingUser){
-            return res.sendStatus(400);
+            res.status(400).json({ error: 'User already exists' });
+            return ;
         }
 
         // create the authentication
@@ -29,10 +35,11 @@ export const register = async (req:express.Request, res: express.Response) => {
                 password: authentication(salt, password),
             }
         })
-        return res.status(200).json(user).end();
+        res.status(201).json({ user }).end();
+        return ;
 
     }catch (error) {
         console.log(error);
-        return res.sendStatus(400);
+        next( res.sendStatus(400));
     }
 }
