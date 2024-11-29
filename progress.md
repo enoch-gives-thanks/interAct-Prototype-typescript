@@ -641,19 +641,25 @@ import express from 'express';
 import { createUser, getUserByEmail } from '../db/users';
 import { authentication, random } from '../helpers';
 
-export const register = async (req:express.Request, res: express.Response) => {
+export const register = async (
+    req:express.Request, 
+    res: express.Response,
+    next: express.NextFunction // Add `next` to ensure it matches Express's handler type
+): Promise<void> => {
     try {
         // registration process
         const {email, password, username} = req.body // we define in user.ts
 
         if(!email || !password || !username){
-            return res.sendStatus(400);
+            res.status(400).json({ error: 'Missing required fields' });
+            return ;
         }
 
         const existingUser = await getUserByEmail(email);
 
         if(existingUser){
-            return res.sendStatus(400);
+            res.status(400).json({ error: 'User already exists' });
+            return ;
         }
 
         // create the authentication
@@ -668,11 +674,12 @@ export const register = async (req:express.Request, res: express.Response) => {
                 password: authentication(salt, password),
             }
         })
-        return res.status(200).json(user).end();
+        res.status(201).json({ user }).end();
+        return ;
 
     }catch (error) {
         console.log(error);
-        return res.sendStatus(400);
+        next( res.sendStatus(400));
     }
 }
 ```
@@ -702,182 +709,12 @@ New-Item -ItemType Directory -Path src\router; New-Item -ItemType File -Path src
 ```sh
 mkdir -p src/router && touch src/router/authentication.ts
 ```
-
-# TODO: to fix this bug:
-Should reference in poe
-
-The current version of your `register` function is mostly correct, but the **TypeScript error** you're encountering likely stems from the return type of the function or its structure not fully matching what **Express** expects for route handlers.
-
-### **Fix for TypeScript Error**
-
-The current function is missing the `NextFunction` parameter in its signature, which is sometimes expected by Express middleware or route handlers. Even if you're not using the `next` parameter explicitly, including it ensures the function conforms to the expected type of an Express route handler.
-
-Here’s the corrected and improved version of your function:
-
-```typescript
+```ts
 import express from 'express';
-import { getUserByEmail, createUser } from '../services/user'; // Assuming these functions are defined in `user.ts`
-import { random, authentication } from '../utils'; // Assuming these utilities are defined in `utils.ts`
 
-export const register = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction // Add `next` to ensure it matches Express's handler type
-): Promise<void> => {
-  try {
-    // Extract email, password, and username from the request body
-    const { email, password, username } = req.body;
+import {register} from '../controllers/authentication'
 
-    // Check if any of the required fields are missing
-    if (!email || !password || !username) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Check if a user with the given email already exists
-    const existingUser = await getUserByEmail(email);
-
-    if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
-
-    // Generate a random salt for password hashing
-    const salt = random();
-
-    // Create the new user
-    const user = await createUser({
-      email,
-      username,
-      authentication: {
-        salt,
-        password: authentication(salt, password), // Hash the password using the salt
-      },
-    });
-
-    // Return the created user (excluding sensitive fields like password or salt, if necessary)
-    return res.status(201).json({ user }).end();
-  } catch (error) {
-    // Log the error and pass it to the next middleware
-    console.error('Error during registration:', error);
-    next(error); // Use `next` to propagate the error to Express's error handler
-  }
-};
-```
-
----
-
-### **Changes Made**
-1. **Added `next: express.NextFunction`**:
-   - Even if you don't use `next` directly, adding it ensures the function signature matches what Express expects for middleware/route handlers: `(req, res, next) => {}`.
-   - This resolves the TypeScript error because now the function's type fully satisfies the expected type.
-
-2. **Improved Error Handling**:
-   - Instead of `return res.sendStatus(400)` for every error, I added more descriptive error messages (e.g., `Missing required fields`, `User already exists`).
-   - For unexpected errors, the `next(error)` function forwards the error to Express's error-handling middleware.
-
-3. **Improved Response Codes**:
-   - Changed `res.sendStatus(400)` to `res.status(400).json(...)` to provide more detailed feedback to the client.
-   - Changed the success response from `res.status(200)` to `res.status(201)` because `201 Created` is more appropriate for creation operations.
-
-4. **Utilities and Services**:
-   - Assumed `getUserByEmail`, `createUser`, `random`, and `authentication` are helper functions you’ve defined elsewhere. Make sure these are properly implemented and imported.
-
----
-
-### **Why Does This Resolve the Error?**
-The error occurs because the return type of `register` (`Promise<express.Response>` in your original version) does not conform to what Express's `router.post` expects. By:
-1. Adding `next: express.NextFunction` to the function's signature.
-2. Ensuring the return type is `Promise<void>` (since responses are sent via `res`), you align the `register` function's type with the expected type for an Express route handler.
-
-Express expects route handlers to have this signature:
-```typescript
-(req: Request, res: Response, next?: NextFunction) => void | Promise<void>
-```
-Your updated function now matches this, resolving the TypeScript error.
-
----
-
-### **Example Integration**
-
-#### **Router Definition**
-Here's how you can integrate this `register` function into your router:
-
-```typescript
-import express from 'express';
-import { register } from '../controllers/authentication';
-
-const router = express.Router();
-
-router.post('/auth/register', register);
-
-export default router;
-```
-
-#### **Express Application**
-Finally, ensure your Express app sets up the routes correctly:
-
-```typescript
-import express from 'express';
-import bodyParser from 'body-parser';
-import authRouter from './routes/authentication';
-
-const app = express();
-const port = 3000;
-
-// Middleware for parsing JSON requests
-app.use(bodyParser.json());
-
-// Use authentication routes
-app.use('/api', authRouter); // Prefix all routes with `/api`
-
-// Error-handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
-});
-
-// Start the server
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
-```
-
----
-
-### **Testing the Endpoint**
-You can test the `/auth/register` endpoint using a tool like **Postman** or **cURL**. For example:
-
-#### Request:
-```json
-POST /api/auth/register
-Content-Type: application/json
-
-{
-  "email": "test@example.com",
-  "password": "password123",
-  "username": "testuser"
+export default (router: express.Router) => {
+    router.post('/auth/register', register );
 }
 ```
-
-#### Response (Success):
-```json
-{
-  "user": {
-    "email": "test@example.com",
-    "username": "testuser",
-    "authentication": {
-      "salt": "random-generated-salt"
-    }
-  }
-}
-```
-
-#### Response (Error - Missing Fields):
-```json
-{
-  "error": "Missing required fields"
-}
-```
-
----
-
-This updated `register` function should resolve the TypeScript error and improve overall functionality and error handling. Let me know if you have further questions! 😊
