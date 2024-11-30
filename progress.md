@@ -340,6 +340,10 @@ windows:
 powershell 
 mkdir src; New-Item -Path src\index.ts -ItemType File
 ```
+linux:
+```sh
+mkdir src && touch src/index.ts
+```
 in index.ts
 ```ts
 console.log("hello typescript");
