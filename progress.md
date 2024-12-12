@@ -1,8 +1,5 @@
 Vid: 
-https://youtu.be/b8ZUb_Okxro?si=V3PjMcxET8IrBNaW&t=1645
-
-Poe:
-https://poe.com/chat/2vyaou39qqu8tyd09z3
+https://youtu.be/b8ZUb_Okxro?feature=shared&t=1925
 
 # Steps:
 ## Configure
@@ -630,6 +627,72 @@ export const authentication = (salt: string, password: string) => {
     return cryto.createHmac('sha256', [salt, password].join('/')).update(SECRET).digest('hex');
 };
 ```
+```ts
+cryto.createHmac('sha256', [salt, password].join('/')).update(SECRET).digest('hex');
+```
+of code is using the Node.js `crypto` module to generate a hashed output (in hexadecimal format) based on a combination of a salt, a password, and a secret key. Let's break it down step by step:
+
+```javascript
+return crypto.createHmac('sha256', [salt, password].join('/')).update(SECRET).digest('hex');
+```
+
+### 1. `crypto.createHmac('sha256', [salt, password].join('/'))`
+- **`crypto.createHmac`**: This method creates an HMAC (Hash-based Message Authentication Code) using a specified hash function and a key.
+- **`'sha256'`**: This specifies the hash algorithm used, in this case, SHA-256 (a secure hashing algorithm).
+- **`[salt, password].join('/')`**: 
+  - `[salt, password]` creates an array containing the `salt` and `password` values.
+  - `.join('/')` combines the two values into a single string, separated by a `/`. For example:
+    ```javascript
+    const salt = '1234';
+    const password = 'mypassword';
+    console.log([salt, password].join('/')); 
+    // Output: "1234/mypassword"
+    ```
+  - This combined string is used as the **key** for the HMAC.
+
+### 2. `.update(SECRET)`
+- **`update(SECRET)`**: This method specifies the data to be hashed using the HMAC. The `SECRET` value is the input data provided for hashing. For example, this could be a secret key or some sensitive information.
+
+### 3. `.digest('hex')`
+- **`digest('hex')`**: This finalizes the HMAC computation and outputs the result as a hexadecimal string. The hexadecimal format is a common way of representing hashed data.
+
+### What does this line do overall?
+1. It creates an HMAC using:
+   - The SHA-256 hash algorithm.
+   - A key that is a combination of `salt` and `password`, joined by `/`.
+2. It hashes the `SECRET` value using that HMAC.
+3. It returns the resulting hash as a hexadecimal string.
+
+### Example of Usage
+Here's an example to illustrate how it works:
+
+```javascript
+const crypto = require('crypto');
+
+const salt = '1234'; // Example salt
+const password = 'mypassword'; // Example password
+const SECRET = 'sensitive-data'; // Data to hash
+
+const result = crypto
+  .createHmac('sha256', [salt, password].join('/'))
+  .update(SECRET)
+  .digest('hex');
+
+console.log(result); // Outputs something like: "5a8dd3ad0756a93ded72b823b19dd877"
+```
+
+### Why is this useful?
+This kind of hashing is typically used for:
+- **Password hashing**: Combining a salt and password ensures that even if two users have the same password, their hashed values will be different.
+- **Data integrity**: HMAC ensures that data cannot be tampered with without the key.
+- **Authentication**: It is useful for verifying the authenticity of data or messages.
+
+### Important Notes:
+1. **Security Best Practices**:
+   - Ensure `salt` is unique for each user or piece of data.
+   - Use a strong, randomly generated `SECRET` key.
+2. **Hashing Passwords**: If this is being used for password hashing, consider using specialized libraries like `bcrypt` or `argon2`, as they are specifically designed for securely hashing passwords.
+
 
 ## create routing for authetication in controllers
 ```powershell
@@ -656,7 +719,7 @@ export const register = async (
 
         if(!email || !password || !username){
             res.status(400).json({ error: 'Missing required fields' });
-            return ;
+            return ; // the return statements are used to exit the function early and prevent further execution
         }
 
         const existingUser = await getUserByEmail(email);
@@ -794,3 +857,345 @@ excepted return:
         "__v": 0
     }
 }
+
+in Mongo DB:
+local -> database -> interact
+```json
+{
+  "_id": {
+    "$oid": "674986122701fa467bfd7664"
+  },
+  "username": "interAct",
+  "email": "abc@gmail.com",
+  "authentication": {
+    "password": "6b8c6c4019e50e04e6e09465adbd55ff308a44d6a21122fe34e0e4c33674db5e",
+    "salt": "nB7EVkFDKQAk41vYLm6ica9NclWnIM3/nWjKl2fNa64wuoadM+QZTJ/H8o0FpXtsUZ7w6bv0EAXkl+YTY/pc2ozCKyorsSiTTHBizwPPGt0VZMcgetoUPmM9IBddXB5jJIYuc6zg7A1LVnR1nzqnnIy15QgT6/0Qz3XWa/OQ/b4="
+  },
+  "__v": 0
+}
+```
+
+## create login controllers
+In the login controller
+in src/controllers/authentication.ts
+
+Now we need to create a verification function called loginVerification
+
+```ts
+// import express from 'express';
+// import { createUser, getUserByEmail } from '../db/users';
+// import { authentication, random } from '../helpers';
+
+// add this loginVerification function
+export const loginVerification = async (req: express.Request, res: express.Response) => {
+  try {
+    const {email, password} = req.body; // get post attributes from body request
+
+    // make sure the reqest contain email and password
+    if(!email || !password){
+      return res.sendStatus(400);
+    }
+    
+    // check if there is a user with the email provided
+    const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
+    // .select(): This method is used to specify which fields should be included or excluded in the query result. This is common in ORMs like Mongoose.
+    // '+authentication.salt +authentication.password':
+    // In some ORMs (e.g., Mongoose), fields can be excluded by default for security reasons (e.g., sensitive information like passwords, salts, etc.).
+    // The + symbol explicitly includes fields that are normally excluded.
+    // Here, the query is explicitly requesting the authentication.salt and authentication.password fields, which might have been marked as excluded in the schema definition.
+
+    if(!user){
+      return res.sendStatus(400);
+    }
+    // check password word by comparing the hash and the database
+
+    const expectedHash = authentication(user.authentication.salt, password); // authenication hash the password with the salt and secret
+    if(user.authentcation.password != expectedHash){
+      return res.sendStatus(403);
+    }
+
+    const salt = random();
+    user.authentication.essionToken = authentication(salt, user._id.toString());
+
+
+  }catch (error) {
+    console.log(error);
+    return res.sendStatus(400);
+  }
+}
+
+// export const register = async (
+//     req:express.Request, 
+//     res: express.Response,
+//     next: express.NextFunction // Add `next` to ensure it matches Express's handler type
+// ): Promise<void> => {
+//     try {
+//         // registration process
+//         const {email, password, username} = req.body // we define in user.ts
+
+//         if(!email || !password || !username){
+//             res.status(400).json({ error: 'Missing required fields' });
+//             return ;
+//         }
+
+//         const existingUser = await getUserByEmail(email);
+
+//         if(existingUser){
+//             res.status(400).json({ error: 'User already exists' });
+//             return ;
+//         }
+
+//         // create the authentication
+//         const salt = random();
+
+//         // create user
+//         const user = await createUser({
+//             email,
+//             username,
+//             authentication: {
+//                 salt,
+//                 password: authentication(salt, password),
+//             }
+//         })
+//         res.status(201).json({ user }).end();
+//         return ;
+
+//     }catch (error) {
+//         console.log(error);
+//         next( res.sendStatus(400));
+//     }
+// }
+```
+
+#### explain this line => const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
+
+This line of code is a JavaScript/TypeScript snippet, likely used in a Node.js or similar backend environment, where the **`getUserByEmail` function** is used to fetch a user object from a database, typically through an **ORM** (Object-Relational Mapper) like **Mongoose** (used with MongoDB). Let's break it down step by step:
+
+---
+
+#### **1. `const user = await getUserByEmail(email)`**
+- **`getUserByEmail(email)`**: This function is called to fetch the user data associated with the given email address. It's likely querying a database for a user record.
+- **`await`**: The use of `await` indicates that `getUserByEmail` is an **asynchronous function** (returns a `Promise`). This means the code will wait for the function to resolve before assigning the result to `user`.
+- **`const user`**: The result of the asynchronous call is stored in the `user` variable.
+
+---
+
+#### **2. `.select('+authentication.salt +authentication.password')`**
+- **`.select()`**: This method is used to specify which fields should be included or excluded in the query result. This is common in ORMs like **Mongoose**.
+  
+- **`'+authentication.salt +authentication.password'`**:
+  - In some ORMs (e.g., Mongoose), fields can be **excluded by default** for security reasons (e.g., sensitive information like passwords, salts, etc.).
+  - The `+` symbol explicitly includes fields that are normally excluded.
+  - Here, the query is explicitly requesting the `authentication.salt` and `authentication.password` fields, which might have been marked as excluded in the schema definition.
+
+---
+
+#### **What does this do in practice?**
+The code fetches a user object from the database based on the email address and explicitly includes the sensitive fields `authentication.salt` and `authentication.password` in the result, even if those fields are excluded by default in the database schema or query configuration.
+
+---
+
+#### **Example Use Case**
+This could be part of a **login system**, where the application:
+1. Retrieves the stored `salt` and `password` hash for a user.
+2. Uses them to verify the user's credentials during authentication.
+
+---
+
+#### **Mongoose Example**
+Here’s an example of how this might work in **Mongoose**:
+
+```javascript
+const mongoose = require('mongoose');
+
+// Define a User schema
+const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  authentication: {
+    salt: { type: String, select: false },
+    password: { type: String, select: false },
+  },
+});
+
+// Create the User model
+const User = mongoose.model('User', userSchema);
+
+// Function to get a user by email with sensitive fields
+async function getUserByEmail(email) {
+  return await User.findOne({ email });
+}
+
+// Querying the user
+const email = "example@example.com";
+const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
+
+console.log(user);
+```
+
+---
+
+#### **Why Use `.select()`?**
+- Improves **security**: Sensitive data (like passwords or salts) is excluded from queries by default.
+- Provides **flexibility**: You can selectively include sensitive data when needed (e.g., for authentication purposes).
+
+---
+
+#### **Important Note**
+You should always handle sensitive data like passwords and salts securely:
+- Never store plain-text passwords in a database; always hash them using secure algorithms like **bcrypt** or **argon2**.
+- Avoid exposing sensitive data (like salts and password hashes) in API responses.
+
+
+### create the login function - login controller and the authentication function
+In the login controller
+in src/controllers/authentication.ts
+```ts
+//...
+export const login = async (req:express.Request, res:express.Response)=>{
+  try {
+    const {email, password} = req.body;
+    if(!email || !password){
+      return res.sendStatus(400);
+    }
+    // it is very important to have this because the default query would not include salt and password
+    // allow you to get user.authentication.salt and user.authentication.password
+    const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
+    
+    if(!user){
+      return res.sendStatus(400);
+    }
+    // use hash comparison to compare user password with database hashs
+    const expectdHash = authenication(user.authentication.salt, password);
+
+    if(user.authentication.password != expectedHash) {
+      return res.sendStatus(403);
+    }
+
+    // user is authenticated
+    // therefore its time to update user session
+    const salt = random();
+    user.authentication.sessionToken = authentication(salt, user_id.toString());
+    // store the sessionToken to the database 
+    // so if there is a post or get https request
+    // you only need to check the sessionToken inside the https header (encrypted by https protocol)
+    await user.save();
+
+    // set the session to cookie using http header
+    res.cookie('INTERACT-AUTH',  user.authentication.sessionToken);
+
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(400);
+  }
+}
+
+// export const register = ...
+```
+#### Explaination of how cookies, session and http header works:
+Cookies, sessions, and HTTP headers are fundamental concepts in web development and play important roles in managing user state and transmitting information between the client (usually a web browser) and the server. Let's dive into each of them:
+
+1. Cookies:
+   - Cookies are small pieces of data stored on the client-side by websites.
+   - When a server sends a response to a client, it can include a `Set-Cookie` header, which instructs the browser to store the cookie.
+   - Cookies are typically used to store user preferences, authentication tokens, or session identifiers.
+   - Each cookie has a name, value, expiration date, and other optional attributes.
+   - When the client sends subsequent requests to the same domain, it includes the stored cookies in the `Cookie` header of the request.
+   - Servers can read the cookies from the request headers to identify the user and maintain state across requests.
+   - Cookies have a size limit (usually around 4KB) and can be set with an expiration date or as session cookies (deleted when the browser is closed).
+
+2. Sessions:
+   - Sessions are server-side storage mechanisms used to persist data across multiple requests from the same client.
+   - When a user logs in or starts a session, the server creates a unique session identifier (session ID) and sends it to the client as a cookie.
+   - The server maintains a mapping between the session ID and the associated session data, which can include user information, preferences, or any other relevant data.
+   - On subsequent requests, the client sends the session ID cookie, allowing the server to retrieve the corresponding session data.
+   - Sessions are commonly used for user authentication, shopping carts, or any scenario where data needs to be maintained across requests.
+   - Session data is stored on the server-side and can be stored in memory, files, or databases, depending on the server's configuration.
+
+3. HTTP Headers:
+   - HTTP headers are key-value pairs included in the header section of HTTP requests and responses.
+   - Headers provide additional information about the request or response, such as the content type, encoding, cache control, authentication tokens, and more.
+   - Some commonly used headers include:
+     - `Content-Type`: Specifies the media type of the request or response body (e.g., `application/json`, `text/html`).
+     - `Authorization`: Contains authentication credentials, such as tokens or basic auth details.
+     - `Cache-Control`: Controls caching behavior, indicating whether the response can be cached and for how long.
+     - `Cookie`: Contains the cookies sent by the client to the server.
+     - `Set-Cookie`: Used by the server to instruct the client to store cookies.
+   - Headers are extensible, and developers can define custom headers for specific purposes.
+   - HTTP headers are essential for controlling various aspects of the communication between the client and the server, such as authentication, caching, content negotiation, and more.
+
+Cookies, sessions, and HTTP headers work together to enable stateful communication and user-specific functionality in web applications. Cookies are used to store small amounts of data on the client-side, sessions allow the server to maintain user state across requests, and HTTP headers provide additional information and control over the request-response cycle.
+
+Understanding how these concepts interact is crucial for building secure, scalable, and user-friendly web applications. Proper handling of cookies, sessions, and headers is essential for authentication, authorization, and managing user state effectively.
+
+#### Explaination of how session token works:
+The session token itself is not typically encrypted when transmitted in HTTP headers. However, it is highly recommended to use HTTPS (HTTP Secure) to encrypt the entire communication channel between the client and the server, including the session token and other sensitive data transmitted in headers or request/response bodies.
+
+When using HTTP without encryption, the session token is sent in plain text over the network, making it vulnerable to interception and unauthorized access by attackers who can eavesdrop on the network traffic. This can lead to session hijacking attacks, where an attacker gains access to a user's session by stealing their session token.
+
+On the other hand, when using HTTPS, the communication between the client and the server is encrypted using SSL/TLS (Secure Socket Layer/Transport Layer Security) protocols. HTTPS ensures that all data transmitted, including session tokens and other sensitive information, is encrypted and protected from unauthorized access.
+
+When a client establishes an HTTPS connection with a server, the following occurs:
+
+1. The client and server perform an SSL/TLS handshake to establish a secure connection.
+2. The server sends its SSL/TLS certificate to the client for verification.
+3. The client verifies the server's certificate and generates a shared secret key.
+4. The client and server use the shared secret key to encrypt and decrypt the data transmitted between them.
+
+By using HTTPS, the session token and all other data exchanged between the client and server are encrypted, making it much more difficult for attackers to intercept and steal sensitive information.
+
+It's important to note that while HTTPS encrypts the communication channel, it does not encrypt the session token itself. The session token is still transmitted as plain text within the encrypted HTTPS connection. Therefore, it's crucial to use secure session management practices, such as generating random and unique session tokens, setting appropriate expiration times, and properly invalidating sessions when necessary.
+
+In summary, session tokens themselves are not typically encrypted, but it is essential to use HTTPS to encrypt the entire communication channel and protect the session token and other sensitive data from unauthorized access during transmission.
+
+#### Example of a cookie
+A cookie is a small piece of data stored by a website on a user's browser. It consists of several components that define its properties and behavior. The structure of a cookie includes the following elements:
+
+1. Name:
+   - Every cookie has a unique name that identifies it.
+   - The name is a case-sensitive string that follows certain rules, such as not containing whitespace, semicolons, or commas.
+   - Example: `sessionToken`, `userId`, `preferences`.
+
+2. Value:
+   - The value is the actual data stored in the cookie.
+   - It is a string that can contain text, numbers, or any other data.
+   - The value is usually encoded using URL encoding to handle special characters.
+   - Example: `abc123`, `John`, `%7B%22theme%22%3A%22dark%22%7D` (URL-encoded JSON).
+
+3. Expiration/Max-Age:
+   - Cookies can have an expiration time or a maximum age that determines how long they should be stored by the browser.
+   - The expiration time is set using the `Expires` attribute, which specifies an absolute date and time.
+   - The maximum age is set using the `Max-Age` attribute, which specifies the number of seconds until the cookie expires.
+   - If neither `Expires` nor `Max-Age` is set, the cookie becomes a session cookie and is deleted when the browser is closed.
+   - Example: `Expires=Fri, 31 Dec 2023 23:59:59 GMT`, `Max-Age=3600` (1 hour).
+
+4. Domain:
+   - The domain attribute specifies the domain or subdomain for which the cookie is valid.
+   - By default, a cookie is associated with the domain that set it and is sent back to that domain on subsequent requests.
+   - The domain can be set to a specific subdomain or a parent domain to allow the cookie to be accessed by multiple subdomains.
+   - Example: `Domain=example.com`, `Domain=subdomain.example.com`.
+
+5. Path:
+   - The path attribute specifies the URL path for which the cookie is valid.
+   - By default, a cookie is associated with the path of the page that set it and is sent back to that path and its sub-paths on subsequent requests.
+   - The path can be set to a specific directory or a higher-level directory to limit or expand the scope of the cookie.
+   - Example: `Path=/`, `Path=/subdirectory`.
+
+6. Secure:
+   - The `Secure` attribute is a boolean flag that indicates whether the cookie should only be transmitted over a secure HTTPS connection.
+   - When the `Secure` attribute is set, the cookie will not be sent over unencrypted HTTP connections.
+   - Example: `Secure` (no value needed).
+
+7. HttpOnly:
+   - The `HttpOnly` attribute is a boolean flag that prevents client-side JavaScript from accessing the cookie.
+   - When the `HttpOnly` attribute is set, the cookie cannot be read or manipulated using JavaScript, providing an additional layer of security against cross-site scripting (XSS) attacks.
+   - Example: `HttpOnly` (no value needed).
+
+Here's an example of a cookie string that includes various attributes:
+
+```
+sessionToken=abc123; Expires=Fri, 31 Dec 2023 23:59:59 GMT; Path=/; Domain=example.com; Secure; HttpOnly
+```
+
+In this example, the cookie has a name of `sessionToken`, a value of `abc123`, an expiration date, a path of `/`, a domain of `example.com`, and the `Secure` and `HttpOnly` flags set.
+
+Cookies are set by the server using the `Set-Cookie` header in the HTTP response, and the browser includes the relevant cookies in subsequent requests to the server using the `Cookie` header.

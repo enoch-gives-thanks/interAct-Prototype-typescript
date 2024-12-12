@@ -13,7 +13,7 @@ export const register = async (
 
         if(!email || !password || !username){
             res.status(400).json({ error: 'Missing required fields' });
-            return ;
+            return ; // the return statements are used to exit the function early and prevent further execution
         }
 
         const existingUser = await getUserByEmail(email);
@@ -40,6 +40,6 @@ export const register = async (
 
     }catch (error) {
         console.log(error);
-        next( res.sendStatus(400));
+        next(error);
     }
 }
