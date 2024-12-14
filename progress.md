@@ -1052,42 +1052,46 @@ in src/controllers/authentication.ts
 ```ts
 //...
 export const login = async (req:express.Request, res:express.Response)=>{
-  try {
-    const {email, password} = req.body;
-    if(!email || !password){
+    try {
+      const {email, password} = req.body;
+      if(!email || !password){
+        return res.sendStatus(400);
+      }
+      // it is very important to have this because the default query would not include salt and password
+      // allow you to get user.authentication.salt and user.authentication.password
+      
+      // get the user object fromthe  email information
+      const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
+      
+      if(!user){
+        return res.sendStatus(400);
+      }
+      // use hash comparison to compare user password with database hashs
+      const expectedHash = authentication(user.authentication.salt, password);
+  
+      if(user.authentication.password != expectedHash) {
+        return res.sendStatus(403);
+      }
+  
+      // user is authenticated
+      // therefore its time to update user session
+      const salt = random();
+      user.authentication.sessionToken = authentication(salt, user._id.toString());
+      // store the sessionToken to the database 
+      // so if there is a post or get https request
+      // you only need to check the sessionToken inside the https header (encrypted by https protocol)
+      await user.save();
+  
+      // set the session to cookie using http header
+      res.cookie('INTERACT-AUTH',  user.authentication.sessionToken, {domain: 'localhost', path: '/'});
+  
+      return res.status(200).json(user).end();
+  
+    } catch (error) {
+      console.log(error);
       return res.sendStatus(400);
     }
-    // it is very important to have this because the default query would not include salt and password
-    // allow you to get user.authentication.salt and user.authentication.password
-    const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
-    
-    if(!user){
-      return res.sendStatus(400);
-    }
-    // use hash comparison to compare user password with database hashs
-    const expectdHash = authenication(user.authentication.salt, password);
-
-    if(user.authentication.password != expectedHash) {
-      return res.sendStatus(403);
-    }
-
-    // user is authenticated
-    // therefore its time to update user session
-    const salt = random();
-    user.authentication.sessionToken = authentication(salt, user_id.toString());
-    // store the sessionToken to the database 
-    // so if there is a post or get https request
-    // you only need to check the sessionToken inside the https header (encrypted by https protocol)
-    await user.save();
-
-    // set the session to cookie using http header
-    res.cookie('INTERACT-AUTH',  user.authentication.sessionToken);
-
-  } catch (error) {
-    console.log(error);
-    return res.sendStatus(400);
   }
-}
 
 // export const register = ...
 ```
