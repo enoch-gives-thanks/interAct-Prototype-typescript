@@ -4,11 +4,16 @@ import { authentication, random } from '../helpers';
 // the login function
 // create session
 // set client session via cookies
-export const login = async (req:express.Request, res:express.Response)=>{
+export const login = async (
+        req:express.Request, 
+        res:express.Response,
+        next: express.NextFunction // Add `next` to ensure it matches Express's handler type
+    ): Promise<void> =>{
     try {
       const {email, password} = req.body;
       if(!email || !password){
-        return res.sendStatus(400);
+        res.sendStatus(400);
+        return
       }
       // it is very important to have this because the default query would not include salt and password
       // allow you to get user.authentication.salt and user.authentication.password
@@ -17,13 +22,15 @@ export const login = async (req:express.Request, res:express.Response)=>{
       const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
       
       if(!user){
-        return res.sendStatus(400);
+        res.sendStatus(400);
+        return;
       }
       // use hash comparison to compare user password with database hashs
       const expectedHash = authentication(user.authentication.salt, password);
   
       if(user.authentication.password != expectedHash) {
-        return res.sendStatus(403);
+        res.sendStatus(403);
+        return;
       }
   
       // user is authenticated
@@ -38,11 +45,12 @@ export const login = async (req:express.Request, res:express.Response)=>{
       // set the session to cookie using http header
       res.cookie('INTERACT-AUTH',  user.authentication.sessionToken, {domain: 'localhost', path: '/'});
   
-      return res.status(200).json(user).end();
+      res.status(200).json(user).end();
+      return;
   
     } catch (error) {
-      console.log(error);
-      return res.sendStatus(400);
+        console.log(error);
+        next(error);
     }
   }
 

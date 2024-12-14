@@ -1051,11 +1051,16 @@ In the login controller
 in src/controllers/authentication.ts
 ```ts
 //...
-export const login = async (req:express.Request, res:express.Response)=>{
+export const login = async (
+        req:express.Request, 
+        res:express.Response,
+        next: express.NextFunction // Add `next` to ensure it matches Express's handler type
+    ): Promise<void> =>{
     try {
       const {email, password} = req.body;
       if(!email || !password){
-        return res.sendStatus(400);
+        res.sendStatus(400);
+        return
       }
       // it is very important to have this because the default query would not include salt and password
       // allow you to get user.authentication.salt and user.authentication.password
@@ -1064,13 +1069,15 @@ export const login = async (req:express.Request, res:express.Response)=>{
       const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
       
       if(!user){
-        return res.sendStatus(400);
+        res.sendStatus(400);
+        return;
       }
       // use hash comparison to compare user password with database hashs
       const expectedHash = authentication(user.authentication.salt, password);
   
       if(user.authentication.password != expectedHash) {
-        return res.sendStatus(403);
+        res.sendStatus(403);
+        return;
       }
   
       // user is authenticated
@@ -1085,16 +1092,36 @@ export const login = async (req:express.Request, res:express.Response)=>{
       // set the session to cookie using http header
       res.cookie('INTERACT-AUTH',  user.authentication.sessionToken, {domain: 'localhost', path: '/'});
   
-      return res.status(200).json(user).end();
+      res.status(200).json(user).end();
+      return;
   
     } catch (error) {
-      console.log(error);
-      return res.sendStatus(400);
+        console.log(error);
+        next(error);
     }
   }
 
 // export const register = ...
 ```
+
+In the router authentication.ts
+in src/router/authentication.ts
+
+```ts
+//..
+// update the register import to this
+import {
+    register,
+    login
+} from '../controllers/authentication'
+
+
+//export default (router: express.Router) => {
+    //router.post('/auth/register', register ); 
+    router.post('/auth/login', login ); // add this line
+//}
+```
+
 #### Explaination of how cookies, session and http header works:
 Cookies, sessions, and HTTP headers are fundamental concepts in web development and play important roles in managing user state and transmitting information between the client (usually a web browser) and the server. Let's dive into each of them:
 
@@ -1203,3 +1230,6 @@ sessionToken=abc123; Expires=Fri, 31 Dec 2023 23:59:59 GMT; Path=/; Domain=examp
 In this example, the cookie has a name of `sessionToken`, a value of `abc123`, an expiration date, a path of `/`, a domain of `example.com`, and the `Secure` and `HttpOnly` flags set.
 
 Cookies are set by the server using the `Set-Cookie` header in the HTTP response, and the browser includes the relevant cookies in subsequent requests to the server using the `Cookie` header.
+
+
+## 
