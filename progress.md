@@ -1232,4 +1232,278 @@ In this example, the cookie has a name of `sessionToken`, a value of `abc123`, a
 Cookies are set by the server using the `Set-Cookie` header in the HTTP response, and the browser includes the relevant cookies in subsequent requests to the server using the `Cookie` header.
 
 
-## 
+## Test login function using postman
+
+post to http://localhost:8080/auth/login
+
+with the registered 
+```json
+{
+    "email": "abc@gmail.com",
+    "password": "wer234sfd"
+}
+```
+
+it should return:
+```json
+  {
+    "authentication": {
+        "password": "6b8c6c4019e50e04e6e09465adbd55ff308a44d6a21122fe34e0e4c33674db5e",
+        "salt": "nB7EVkFDKQAk41vYLm6ica9NclWnIM3/nWjKl2fNa64wuoadM+QZTJ/H8o0FpXtsUZ7w6bv0EAXkl+YTY/pc2ozCKyorsSiTTHBizwPPGt0VZMcgetoUPmM9IBddXB5jJIYuc6zg7A1LVnR1nzqnnIy15QgT6/0Qz3XWa/OQ/b4=",
+        "sessionToken": "4ddae37af941848aa202069b35eab3befbef1b01a2a34ab8566c0759e65f7af1"
+    },
+    "_id": "674986122701fa467bfd7664",
+    "username": "interAct",
+    "email": "abc@gmail.com",
+    "__v": 0
+}
+```
+
+## Create users route using our first middleware
+```powershell
+New-Item -ItemType Directory -Path src\middlewares -Force; New-Item -ItemType File -Path src\middlewares\index.ts
+```
+
+```sh
+mkdir -p src/middlewares && touch src/middlewares/index.ts
+```
+
+To follow alongside with this tutorial 
+you can install 
+lodash type
+```sh,bat
+pnpm add lodash
+pnpm add -D @types/lodash
+```
+
+
+go to src/middlewares/index.ts and type
+```ts
+import express from 'express';
+import {get, merge} from 'lodash;
+
+import {getUserBySessionToken} from '../db/users';
+
+export const isAuthenticated = async (
+    req: express.Request, 
+    res:express.Response,
+    next: express.NextFunction
+  ): Promise<void>  => {
+  try {
+    // first, we want to extract session token from cookies
+    const sessionToken = req.cookies['INTERACT-AUTH'];
+    if(!sessionToken) return res.sendStatus(403);
+
+    const existingUser = await getUserBySessionToken(sessionToken);
+    if(!existingUser) return res.sendStatus(403);
+
+    merge(res, {identity: existingUser});
+    next();
+
+  } catch(error){
+    console.log(error);
+    return res.sendStatus(400)
+  }
+}
+```
+
+The `next` function in Express is used to pass control to the next middleware function in the stack. In the context of your `isAuthenticated` middleware, it should be called when the user is successfully authenticated. This allows the request to proceed to the next middleware or route handler.
+
+Here’s how to use `next` in your `isAuthenticated` function:
+
+1. After successfully retrieving and validating the user, call `next()` to pass control to the next middleware.
+2. Ensure that the `next` function is called only when authentication is successful.
+
+Here’s an updated version of your function with the `next` function included:
+
+```typescript
+import express, { Request, Response, NextFunction } from 'express';
+import { merge } from 'lodash';
+import { getUserBySessionToken } from '../db/users';
+
+export const isAuthenticated = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        // Extract session token from cookies
+        const sessionToken = req.cookies['INTERACT-AUTH'];
+        if (!sessionToken) res.sendStatus(403);
+
+        const existingUser = await getUserBySessionToken(sessionToken);
+        if (!existingUser) res.sendStatus(403);
+
+        // Merge user information into the response object
+        merge(res, { identity: existingUser });
+
+        // Call the next middleware function
+        next();
+    } catch (error) {
+        console.error(error); // Use console.error for error logging
+        return res.sendStatus(400);
+    }
+};
+```
+
+### Key Points:
+- **Control Flow**: Calling `next()` is essential for allowing the request to continue processing. If you don't call it, the request will hang, and the user won't receive a response.
+- **Error Handling**: If an error occurs, you should still handle it appropriately (e.g., logging it and responding with an error status), as shown in your original code.
+- **Middleware Stack**: The `isAuthenticated` middleware can be added to any route that needs authentication, ensuring that only authenticated users can access those routes.
+
+## Create users route using our first middleware
+```powershell
+New-Item -ItemType Directory -Path src\controllers -Force; New-Item -ItemType File -Path src\controllers\user.ts
+```
+
+```sh
+mkdir -p src/controllers && touch src/controllers/user.ts
+```
+
+```ts
+import express from 'express';
+import {getUsers} from '../db/users';
+
+export const getAllUsers = async (
+    req: express.Request, 
+    res: express.Response
+): Promise<any>=>{
+  try{
+    const users = await getUsers();
+    res.status(200).json(users);
+
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(400);
+  }
+};
+
+```
+
+or you can directly write the above script to the file
+
+```powershell
+$filename = "src\controllers\user.ts"
+$multilineText = @"
+import express from 'express';
+import {getUsers} from '../db/users';
+
+export const getAllUsers = async (
+    req: express.Request, 
+    res: express.Response
+): Promise<any>=>{
+  try{
+    const users = await getUsers();
+    res.status(200).json(users);
+
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(400);
+  }
+};
+
+"@
+
+# Write multiline text to the file
+Set-Content -Path $filename -Value $multilineText
+
+Write-Output "File has been written successfully!"
+
+```
+
+or bash
+
+```sh
+filename="src/controllers/user.ts"
+
+cat <<EOL > $filename
+import express from 'express';
+import {getUsers} from '../db/users';
+
+export const getAllUsers = async (
+    req: express.Request, 
+    res: express.Response
+): Promise<any>=>{
+  try{
+    const users = await getUsers();
+    res.status(200).json(users);
+
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(400);
+  }
+};
+EOL
+
+echo "File has been written successfully!"
+
+```
+
+## create a new router
+```powershell
+New-Item -ItemType Directory -Path src\router -Force; New-Item -ItemType File -Path src\router\user.ts
+```
+
+```sh
+mkdir -p src/router && touch src/router/user.ts
+```
+
+In the src\router\user.ts
+```ts
+import express from 'express';
+import {getAllUsers} from '../controllers/users';
+
+export default (router: express.Router)=>{
+  router.get('/users', getAllUsers);
+}
+```
+
+or you can directly write the above script to the file
+
+```powershell
+$filename = "src\router\user.ts"
+$multilineText = @"
+import express from 'express';
+import {getAllUsers} from '../controllers/users';
+
+export default (router: express.Router)=>{
+  router.get('/users', getAllUsers);
+}
+"@
+# Write multiline text to the file
+Set-Content -Path $filename -Value $multilineText
+Write-Output "File has been written successfully!"
+
+```
+
+or bash
+
+```sh
+filename="src/router/user.ts"
+
+cat <<EOL > $filename
+import express from 'express';
+import {getAllUsers} from '../controllers/users';
+
+export default (router: express.Router)=>{
+  router.get('/users', getAllUsers);
+}
+EOL
+
+echo "File has been written successfully!"
+
+```
+
+## update router index.ts to 
+```ts
+//import express from 'express';
+//import authentication from './authentication';
+import users from './user';
+//const router = express.Router();
+
+//export default (): express.Router => {
+    //authentication(router);
+    users(router);
+    //return router;
+//}
+```
