@@ -1292,11 +1292,18 @@ export const isAuthenticated = async (
 ): Promise<void> => {
     try {
         // Extract session token from cookies
+        // make sure you return void
         const sessionToken = req.cookies['INTERACT-AUTH'];
-        if (!sessionToken) res.sendStatus(403);
+        if (!sessionToken) {
+            res.sendStatus(403);
+            return;
+        }
 
         const existingUser = await getUserBySessionToken(sessionToken);
-        if (!existingUser) res.sendStatus(403);
+        if (!existingUser) {
+            res.sendStatus(403);
+            return;
+        }
 
         // Merge user information into the response object
         merge(res, { identity: existingUser });
@@ -1321,6 +1328,145 @@ Here’s how to use `next` in your `isAuthenticated` function:
 - **Control Flow**: Calling `next()` is essential for allowing the request to continue processing. If you don't call it, the request will hang, and the user won't receive a response.
 - **Error Handling**: If an error occurs, you should still handle it appropriately (e.g., logging it and responding with an error status), as shown in your original code.
 - **Middleware Stack**: The `isAuthenticated` middleware can be added to any route that needs authentication, ensuring that only authenticated users can access those routes.
+
+The **"Cannot set headers after they are sent to the client"** error in Express occurs when you attempt to modify or send an HTTP response after it has already been sent to the client. This typically happens when:
+
+1. **You call `res.send`, `res.json`, or `res.end` multiple times for the same request.**
+2. **You attempt to modify headers (`res.setHeader`, `res.status`) after a response is already sent.**
+
+Here’s how to debug and fix the issue:
+
+---
+
+### **Steps to Fix the Issue** Error: Cannot set headers after they are sent to the client
+
+#### **1. Check the Middleware (`src/middlewares/index.ts`)**
+   - Middleware is likely calling `res.sendStatus` or `res.send` multiple times.
+   - Example of a problematic middleware:
+
+     ```ts
+     export const myMiddleware = async (req, res, next) => {
+       try {
+         if (someCondition) {
+           return res.sendStatus(400); // This sends a response
+         }
+         // Processing continues here, which might cause another response to be sent
+         next(); // Pass control to the next middleware or route handler
+       } catch (error) {
+         res.status(500).send("Internal Server Error"); // This might also be called
+       }
+     };
+     ```
+
+   - **Fix:** Ensure the middleware does not call `next()` or send multiple responses after one has already been sent.
+
+     ```ts
+     export const myMiddleware = async (req, res, next) => {
+       try {
+         if (someCondition) {
+           return res.sendStatus(400); // Ends the request-response cycle
+         }
+         next(); // Only called if the above condition does not send a response
+       } catch (error) {
+         res.status(500).send("Internal Server Error");
+       }
+     };
+     ```
+
+---
+
+#### **2. Check Controller Logic**
+   - If your controller sends a response but processing continues, it can lead to multiple responses being sent.
+   - Example of problematic controller logic:
+
+     ```ts
+     export const myController = async (req, res) => {
+       res.send("Response 1"); // Sends a response
+       // Further logic sends another response
+       res.send("Response 2"); // Error: Cannot set headers after they are sent
+     };
+     ```
+
+   - **Fix:** Use `return` after sending a response to stop further execution:
+
+     ```ts
+     export const myController = async (req, res) => {
+       res.send("Response 1");
+       return; // Ensures no further code is executed
+     };
+     ```
+
+---
+
+#### **3. Avoid Duplicate `next()` Calls**
+   - Calling `next()` after sending a response can cause Express to continue processing the request, potentially invoking additional middlewares or route handlers.
+   - Example of a problematic middleware:
+
+     ```ts
+     export const myMiddleware = async (req, res, next) => {
+       res.send("Response sent");
+       next(); // Error: Cannot set headers after they are sent
+     };
+     ```
+
+   - **Fix:** Do not call `next()` after sending a response:
+
+     ```ts
+     export const myMiddleware = async (req, res, next) => {
+       res.send("Response sent");
+       // Remove next(); as the response is already sent
+     };
+     ```
+
+---
+
+#### **4. Check for Unhandled Promises**
+   - If an asynchronous function throws an error after a response has already been sent, it might trigger additional responses.
+   - Example of problematic code:
+
+     ```ts
+     export const myController = async (req, res) => {
+       res.send("Response sent");
+       someAsyncFunction().catch((error) => {
+         res.status(500).send("Error occurred"); // Error: Cannot set headers after they are sent
+       });
+     };
+     ```
+
+   - **Fix:** Use `try-catch` blocks to handle errors properly:
+
+     ```ts
+     export const myController = async (req, res) => {
+       try {
+         res.send("Response sent");
+         await someAsyncFunction(); // Ensure this does not trigger another response
+       } catch (error) {
+         console.error(error); // Log the error instead of sending another response
+       }
+     };
+     ```
+
+---
+
+### **Best Practices to Avoid This Issue**
+1. **Always `return` after sending a response.**
+2. **Avoid calling `next()` after sending a response.**
+3. **Use proper error handling with `try-catch` blocks.**
+4. **Ensure each request-response cycle ends with only one response.**
+5. **Log when and where responses are being sent for debugging.**
+
+---
+
+### Debugging Tips
+- Add logging before sending responses:
+  ```ts
+  console.log("Sending response:", responseBody);
+  res.send(responseBody);
+  ```
+- Check middleware and controller execution order to ensure no overlapping responses.
+
+By carefully following these steps and analyzing your middleware and controllers, you can resolve the **"Cannot set headers after they are sent to the client"** error effectively.
+
 
 ## Create users route using our first middleware
 ```powershell
@@ -1555,3 +1701,61 @@ graph TD
 | `db/`              | Handles database interactions (e.g., queries, schema definitions)         |
 
 This structure ensures a clean separation of concerns, making the application modular, scalable, and maintainable.
+
+## Test the login with the user get function
+
+Create a new user using postman for later testing
+Post request
+```
+http://localhost:8080/auth/register
+```
+```json
+{
+    "email": "foo@gmail.com",
+    "password": "foower234sfd",
+    "username": "foointerAct"
+}
+```
+
+Test the get user function via GET in postman
+```
+http://localhost:8080/users
+```
+
+Response:
+```json
+[
+    {
+        "_id": "674986122701fa467bfd7664",
+        "username": "interAct",
+        "email": "abc@gmail.com",
+        "__v": 0
+    },
+    {
+        "_id": "6762419db629a8131b6bf212",
+        "username": "foointerAct",
+        "email": "foo@gmail.com",
+        "__v": 0
+    }
+]
+```
+
+Noted that if you remove the authentication cookies you can still get all the user information. Therefore we want to change that and protect our user valuable information. We have to go back to our router index (src/router/user.ts)
+
+```ts
+//import express from 'express';
+//import {getAllUsers} from '../controllers/user';
+import {isAuthenticated} from '../middlewares';
+//export default (router: express.Router)=>{
+  router.get('/users', isAuthenticated, getAllUsers); //router.get('/users', getAllUsers);
+//};
+```
+
+Now go back to postman and remove localhost cookies
+and try to send a GET request to 
+```
+http://localhost:8080/users
+```
+
+You should see "Forbidden"
+
