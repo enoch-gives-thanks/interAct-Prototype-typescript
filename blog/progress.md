@@ -1104,8 +1104,7 @@ export const login = async (
 // export const register = ...
 ```
 
-In the router authentication.ts
-in src/router/authentication.ts
+In the router authentication.ts folder update src/router/authentication.ts using the newly created login function
 
 ```ts
 //..
@@ -1260,17 +1259,20 @@ it should return:
 ```
 
 ## Create users route using our first middleware
+For windows user
 ```powershell
 New-Item -ItemType Directory -Path src\middlewares -Force; New-Item -ItemType File -Path src\middlewares\index.ts
 ```
-
+For linux user
 ```sh
 mkdir -p src/middlewares && touch src/middlewares/index.ts
 ```
 
 To follow alongside with this tutorial 
 you can install 
-lodash type
+lodash using the following
+
+This will allow you to merge your account information once you login
 ```sh,bat
 pnpm add lodash
 pnpm add -D @types/lodash
@@ -1279,45 +1281,7 @@ pnpm add -D @types/lodash
 
 go to src/middlewares/index.ts and type
 ```ts
-import express from 'express';
-import {get, merge} from 'lodash;
-
-import {getUserBySessionToken} from '../db/users';
-
-export const isAuthenticated = async (
-    req: express.Request, 
-    res:express.Response,
-    next: express.NextFunction
-  ): Promise<void>  => {
-  try {
-    // first, we want to extract session token from cookies
-    const sessionToken = req.cookies['INTERACT-AUTH'];
-    if(!sessionToken) return res.sendStatus(403);
-
-    const existingUser = await getUserBySessionToken(sessionToken);
-    if(!existingUser) return res.sendStatus(403);
-
-    merge(res, {identity: existingUser});
-    next();
-
-  } catch(error){
-    console.log(error);
-    return res.sendStatus(400)
-  }
-}
-```
-
-The `next` function in Express is used to pass control to the next middleware function in the stack. In the context of your `isAuthenticated` middleware, it should be called when the user is successfully authenticated. This allows the request to proceed to the next middleware or route handler.
-
-Here’s how to use `next` in your `isAuthenticated` function:
-
-1. After successfully retrieving and validating the user, call `next()` to pass control to the next middleware.
-2. Ensure that the `next` function is called only when authentication is successful.
-
-Here’s an updated version of your function with the `next` function included:
-
-```typescript
-import express, { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { merge } from 'lodash';
 import { getUserBySessionToken } from '../db/users';
 
@@ -1341,10 +1305,17 @@ export const isAuthenticated = async (
         next();
     } catch (error) {
         console.error(error); // Use console.error for error logging
-        return res.sendStatus(400);
+        res.sendStatus(400);
     }
 };
 ```
+
+The `next` function in Express is used to pass control to the next middleware function in the stack. In the context of your `isAuthenticated` middleware, it should be called when the user is successfully authenticated. This allows the request to proceed to the next middleware or route handler.
+
+Here’s how to use `next` in your `isAuthenticated` function:
+
+1. After successfully retrieving and validating the user, call `next()` to pass control to the next middleware.
+2. Ensure that the `next` function is called only when authentication is successful.
 
 ### Key Points:
 - **Control Flow**: Calling `next()` is essential for allowing the request to continue processing. If you don't call it, the request will hang, and the user won't receive a response.
@@ -1507,3 +1478,80 @@ import users from './user';
     //return router;
 //}
 ```
+
+### Explanation of the Folder Structure
+
+This folder structure is common in **Node.js** applications written in **TypeScript**, organized using the **MVC (Model-View-Controller)** pattern and middleware architecture. Here’s what each folder represents:
+
+---
+
+### 1. **Controllers (`controllers/`)**
+- **Purpose:** Controllers contain the logic for handling incoming requests and responding to clients. They act as intermediaries between the **router** and the **business logic** or **database interactions**.
+- **Files:**
+  - `authentication.ts`: Handles authentication-related logic (e.g., login, signup).
+  - `user.ts`: Handles operations related to users (e.g., fetching user data, updating profiles).
+
+---
+
+### 2. **Router (`router/`)**
+- **Purpose:** Routers define the application's API endpoints or routes. They map HTTP requests (e.g., `GET`, `POST`, `PUT`, `DELETE`) to specific **controller functions**.
+- **Files:**
+  - `authentication.ts`: Defines routes for authentication (e.g., `/login`, `/register`).
+  - `user.ts`: Defines routes for user-related operations (e.g., `/users`, `/users/:id`).
+  - `index.ts`: Combines and exports all routes.
+
+---
+
+### 3. **Middlewares (`middlewares/`)**
+- **Purpose:** Middleware functions process requests before they reach the controllers or after the response is sent. They are used for tasks like authentication, logging, error handling, or request validation.
+- **Files:**
+  - `index.ts`: Likely contains custom middleware logic (e.g., authentication check, request validation).
+
+---
+
+### 4. **Database (`db/`)**
+- **Purpose:** This folder contains files that interact with the database. These files define database models, queries, or utility functions for data manipulation.
+- **Files:**
+  - `users.ts`: Likely contains database schema or queries related to user data.
+
+---
+
+### Diagram Representation of Folder Interactions
+
+Below is a visual representation of how these components interact in a typical **request-response cycle**:
+
+```mermaid
+graph TD
+  A[Client Request] -->|HTTP Request| B[Router]
+  B -->|Route to appropriate controller| C[Controller]
+  C -->|Business Logic| D[Database]
+  D -->|Query Results| C
+  C -->|Processed Response| A
+  B -->|Middleware Processing| M[Middlewares]
+  M -->|Pass Request| C
+```
+![Alt text](folderStructDiagram.png?raw=true "Folder Structure Diagram")
+
+
+---
+
+### Step-by-Step Workflow
+1. **Client Request:** A client sends an HTTP request to the server (e.g., `POST /login`).
+2. **Router:** The request is routed to the appropriate **controller** based on the route definitions.
+3. **Middleware:** Middleware processes the request (e.g., checks authentication, validates input).
+4. **Controller:** The controller handles the logic (e.g., validates user credentials) and interacts with the **database** if necessary.
+5. **Database:** The database processes queries (e.g., fetch user data) and returns the results.
+6. **Response:** The controller processes the results and sends a response back to the client.
+
+---
+
+### Summary Table
+
+| **Folder**        | **Purpose**                                                                 |
+|--------------------|-----------------------------------------------------------------------------|
+| `controllers/`     | Handles request logic and interacts with the database                     |
+| `router/`          | Defines API endpoints and maps them to controllers                        |
+| `middlewares/`     | Processes requests (e.g., authentication, validation) before controllers  |
+| `db/`              | Handles database interactions (e.g., queries, schema definitions)         |
+
+This structure ensures a clean separation of concerns, making the application modular, scalable, and maintainable.

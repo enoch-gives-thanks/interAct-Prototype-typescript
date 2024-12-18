@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { merge } from 'lodash';
 import { getUserBySessionToken } from '../db/users';
 
