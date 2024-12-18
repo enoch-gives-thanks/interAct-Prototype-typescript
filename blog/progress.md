@@ -1676,7 +1676,7 @@ graph TD
   B -->|Middleware Processing| M[Middlewares]
   M -->|Pass Request| C
 ```
-![Alt text](folderStructDiagram.png?raw=true "Folder Structure Diagram")
+!["Folder Structure Diagram"](folderStructDiagram.png?raw=true )
 
 
 ---
@@ -1716,8 +1716,8 @@ http://localhost:8080/auth/register
     "username": "foointerAct"
 }
 ```
-
-Test the get user function via GET in postman
+### Get all the user
+Test the get user function via GET in postman 
 ```
 http://localhost:8080/users
 ```
@@ -1759,3 +1759,62 @@ http://localhost:8080/users
 
 You should see "Forbidden"
 
+## create delete and update for our users
+
+Update the controller for user first
+This is src/controllers/user.ts
+```ts
+//..
+//import {
+//        getUsers, 
+        deleteUserById // add this one
+//} from '../db/users';
+
+//..
+// add the following function 
+export const deleteUserController = async (
+    req: express.Request,
+    res: express.Response
+): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const deletedUser = await deleteUserById(id);
+    res.status(200).json(deletedUser);
+  } catch (error){
+    console.log(error);
+    res.sendStatus(400);
+  }
+}
+```
+
+And then directly add a route
+in src/router/user.ts
+```ts
+import express from 'express';
+import {deleteUserController, getAllUsers} from '../controllers/user';
+import { isAuthenticated } from '../middlewares';
+export default (router: express.Router)=>{
+  router.get('/users', isAuthenticated ,getAllUsers);
+  router.delete('/users/:id', deleteUserController)
+};
+```
+
+Then we will try to delete a user with postman. 
+1) [login a user](#Test-login-function-using-postman)
+2) [get all user's id](#Get-all-the-user)
+3) Then submit a delete request, for instance:``` http://localhost:8080/users/<user id> ``` 
+
+Delete request example:
+```json
+http://localhost:8080/users/6762419db629a8131b6bf212
+```
+
+Delete request response:
+```json
+{
+    "_id": "6762419db629a8131b6bf212",
+    "username": "foointerAct",
+    "email": "foo@gmail.com",
+    "__v": 0
+}
+```
