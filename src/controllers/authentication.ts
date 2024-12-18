@@ -28,7 +28,7 @@ export const login = async (
       // use hash comparison to compare user password with database hashs
       const expectedHash = authentication(user.authentication.salt, password);
   
-      if(user.authentication.password != expectedHash) {
+      if(user.authentication.password !== expectedHash) {
         res.sendStatus(403);
         return;
       }

@@ -910,7 +910,7 @@ export const loginVerification = async (req: express.Request, res: express.Respo
     // check password word by comparing the hash and the database
 
     const expectedHash = authentication(user.authentication.salt, password); // authenication hash the password with the salt and secret
-    if(user.authentcation.password != expectedHash){
+    if(user.authentcation.password !== expectedHash){
       return res.sendStatus(403);
     }
 
@@ -1075,7 +1075,7 @@ export const login = async (
       // use hash comparison to compare user password with database hashs
       const expectedHash = authentication(user.authentication.salt, password);
   
-      if(user.authentication.password != expectedHash) {
+      if(user.authentication.password !== expectedHash) {
         res.sendStatus(403);
         return;
       }
@@ -1818,3 +1818,317 @@ Delete request response:
     "__v": 0
 }
 ```
+However, this allow other user to delete another user
+Therefore, we need to create another middleware checking wheather the delete request the owner of the account. 
+
+update src/middlewards/index.ts
+```ts
+
+//import { 
+    get, //add this get function from lodash
+//    merge 
+//} from 'lodash';
+
+
+export const isOwner = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        //check for the id parameters
+        const { id } = req.params;
+        const currentUserId = get(req, 'identity._id') as string; // tell typescript it is a string
+
+
+        if(!currentUserId){
+            res.sendStatus(403);
+            return; //return void to avoid loops
+        }
+
+        if(currentUserId.toString()!== id){
+            res.sendStatus(403);
+            return; //return void to avoid loops
+        }
+        next();
+    } catch (error) {
+        console.error(error); // Use console.error for error logging
+        res.sendStatus(400);
+    }
+}
+```
+Finally, update the user.ts in router folder /src/router/user.ts
+```ts
+//import express from 'express';
+//import {deleteUserController, getAllUsers} from '../controllers/user';
+//import { 
+//  isAuthenticated, 
+  isOwner // this line is added 
+//} from '../middlewares';
+//export default (router: express.Router)=>{
+//  router.get('/users', isAuthenticated ,getAllUsers);
+//  router.delete('/users/:id', 
+    isOwner, 
+//  deleteUserController);
+//};
+
+
+```
+Some notes:
+If you're implementing **session-based login** instead of **JWT**, the workflow for managing user authentication and authorization changes quite a bit. Here's how the `isOwner` function and the general flow would look when using **sessions**:
+
+---
+
+### **1. How Session-Based Authentication Works**
+
+Session-based authentication relies on the server maintaining user session information, typically stored in memory, a database, or a session store like **Redis**. Here's the flow:
+
+1. **User Logs In**:
+   - The user provides credentials (e.g., email and password).
+   - The server verifies the credentials against the database.
+   - If valid, the server creates a **session** for the user and stores it (usually in a session store).
+   - The session ID is sent back to the client as a cookie.
+
+2. **Client Sends Requests**:
+   - For subsequent requests, the client automatically includes the session cookie in the `Cookie` header.
+
+3. **Server Verifies Session**:
+   - Middleware (e.g., `express-session`) reads the session cookie, retrieves the session data from the session store, and makes it available in `req.session`.
+
+4. **Authorization Logic**:
+   - The user's session data (e.g., `userId`) is used to check permissions for accessing or modifying resources.
+
+---
+
+### **2. Accessing Session Data in `isOwner`**
+
+When using sessions, the `identity` information (like `currentUserId`) is stored in the session and can be accessed via `req.session`.
+
+Here’s how you can implement `isOwner` with session-based authentication:
+
+#### Updated `isOwner` Function:
+
+```typescript
+import { Request, Response, NextFunction } from 'express';
+
+export const isOwner = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    // Extract the resource ID from the URL params
+    const { id } = req.params;
+
+    // Get the current user's ID from the session
+    const currentUserId = req.session.userId; // Assumes `userId` is stored in the session
+
+    // Check if the user is logged in
+    if (!currentUserId) {
+      res.sendStatus(403); // Forbidden
+      return;
+    }
+
+    // Verify ownership
+    if (currentUserId.toString() !== id) {
+      res.sendStatus(403); // Forbidden
+      return;
+    }
+
+    // User is authenticated and authorized
+    next();
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(400); // Bad Request
+  }
+};
+```
+
+---
+
+### **3. Setting Up Session Middleware**
+
+To use session-based authentication, you'll need to configure a session middleware, such as `express-session`. Here's how you can set it up:
+
+#### Install Required Packages:
+
+```bash
+npm install express-session connect-redis ioredis
+```
+
+#### Middleware Configuration:
+
+```typescript
+import session from 'express-session';
+import RedisStore from 'connect-redis';
+import Redis from 'ioredis';
+
+const redisClient = new Redis(); // Create Redis client
+
+// Configure session middleware
+const sessionMiddleware = session({
+  store: new RedisStore({ client: redisClient }), // Use Redis as a session store
+  secret: 'your-secret-key', // Replace with a strong secret key
+  resave: false, // Avoid resaving session if it hasn't been modified
+  saveUninitialized: false, // Don't save empty sessions
+  cookie: {
+    secure: false, // Set to true if using HTTPS
+    httpOnly: true, // Prevent client-side JS from accessing the cookie
+    maxAge: 1000 * 60 * 60, // Session expiration time (e.g., 1 hour)
+  },
+});
+
+export default sessionMiddleware;
+```
+
+#### Apply Middleware:
+
+```typescript
+import express from 'express';
+import sessionMiddleware from './sessionMiddleware';
+
+const app = express();
+
+// Use the session middleware
+app.use(sessionMiddleware);
+
+// Example protected route
+app.get('/protected', (req, res) => {
+  if (!req.session.userId) {
+    return res.sendStatus(401); // Unauthorized
+  }
+  res.send(`Hello, user ${req.session.userId}`);
+});
+```
+
+---
+
+### **4. Logging In with Sessions**
+
+When a user logs in, you’ll create a session and store the user’s information (like `userId`) in `req.session`.
+
+#### Example Login Route:
+
+```typescript
+import { Request, Response } from 'express';
+import bcrypt from 'bcrypt';
+import { User } from './models/User'; // Your MongoDB User model
+
+export const login = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, password } = req.body;
+
+    // Find the user in the database
+    const user = await User.findOne({ email });
+    if (!user) {
+      res.status(401).send('Invalid email or password');
+      return;
+    }
+
+    // Check if the password matches
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      res.status(401).send('Invalid email or password');
+      return;
+    }
+
+    // Store the user's ID in the session
+    req.session.userId = user._id.toString();
+
+    res.status(200).send('Login successful');
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500); // Internal Server Error
+  }
+};
+```
+
+---
+
+### **5. Logout Implementation**
+
+To log out a user, destroy their session:
+
+#### Example Logout Route:
+
+```typescript
+export const logout = (req: Request, res: Response): void => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error(err);
+      res.sendStatus(500); // Internal Server Error
+      return;
+    }
+    res.clearCookie('connect.sid'); // Clear the session cookie
+    res.status(200).send('Logged out successfully');
+  });
+};
+```
+
+---
+
+### **6. Comparing Against MongoDB**
+
+With session-based authentication, you generally don’t need to query the MongoDB user database for every request because:
+- The session already contains the `userId` (or other user info) that was validated during login.
+- However, if you need to verify additional details (e.g., user roles, permissions, or account status), you can query the database as needed.
+
+#### Example with Database Lookup in `isOwner`:
+
+```typescript
+import { User } from './models/User';
+
+export const isOwner = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const currentUserId = req.session.userId;
+
+    if (!currentUserId) {
+      res.sendStatus(403); // Forbidden
+      return;
+    }
+
+    // Verify the user exists and is active
+    const user = await User.findById(currentUserId);
+    if (!user || user.status !== 'active') {
+      res.sendStatus(403); // Forbidden
+      return;
+    }
+
+    // Verify ownership
+    if (currentUserId.toString() !== id) {
+      res.sendStatus(403); // Forbidden
+      return;
+    }
+
+    next();
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(400); // Bad Request
+  }
+};
+```
+
+---
+
+### **7. Key Differences Between Session and JWT**
+
+| **Aspect**              | **Session-Based Authentication**                   | **JWT-Based Authentication**                     |
+|--------------------------|---------------------------------------------------|--------------------------------------------------|
+| **Storage**              | Session stored on the server (e.g., Redis).       | Token stored on the client (e.g., cookies, localStorage). |
+| **Authentication State** | Stateful: Requires a session store.               | Stateless: No server-side storage is needed.     |
+| **Validation**           | Server validates session ID on every request.     | Middleware validates token signature.            |
+| **Security**             | Session ID is stored in cookies (HTTP-only, secure). | Token must be securely stored (e.g., in cookies).|
+| **Scalability**          | Requires scaling session store (e.g., Redis).     | Easier to scale since no state is stored.        |
+
+---
+
+### **Conclusion**
+
+- In session-based login, the `identity` (e.g., `userId`) is stored in the session (`req.session`) after login.
+- The `isOwner` function compares the `userId` from the session with the resource ID (`req.params.id`) to confirm ownership.
+- Database verification is optional and depends on your application's security requirements. Query the database if you need to verify user roles, permissions, or status.
