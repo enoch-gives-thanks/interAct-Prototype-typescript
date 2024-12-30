@@ -1,5 +1,5 @@
-# Steps:
-## Configure
+# Steps on how to build a user Authentication server via nodejs typescript:
+## installation
 ### install typescript and nodemon
 ```sh
 pnpm init
