@@ -1,11 +1,16 @@
 # Steps:
 ## Configure
 ### install typescript and nodemon
+```sh
 pnpm init
+
 pnpm add -D typescript
+
 pnpm add -D ts-node
+
 pnpm add -D nodemon
-    Nodemon is a development tool that automatically restarts a Node.js application whenever file changes are detected in the project.
+```
+Nodemon is a development tool that automatically restarts a Node.js application whenever file changes are detected in the project.
 
 ### config typescript 
 Create tsconfig.json at root folder (layer 0)
