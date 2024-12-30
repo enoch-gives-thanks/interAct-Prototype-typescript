@@ -1305,8 +1305,12 @@ export const isAuthenticated = async (
             return;
         }
 
-        // Merge user information into the response object
-        merge(res, { identity: existingUser });
+        // Base on the session from the cookies,
+        // we injected the identity to the request message for 
+        // the process happens down the pipeline
+        // Merge user information into the request object
+        merge(req, { identity: existingUser });
+
 
         // Call the next middleware function
         next();
@@ -1856,6 +1860,8 @@ export const isOwner = async (
         res.sendStatus(400);
     }
 }
+
+// middleware checking the session and inject the user information to the following code
 ```
 Finally, update the user.ts in router folder /src/router/user.ts
 ```ts
@@ -1868,6 +1874,7 @@ Finally, update the user.ts in router folder /src/router/user.ts
 //export default (router: express.Router)=>{
 //  router.get('/users', isAuthenticated ,getAllUsers);
 //  router.delete('/users/:id', 
+    isAuthenticated,
     isOwner, 
 //  deleteUserController);
 //};
@@ -2132,3 +2139,4 @@ export const isOwner = async (
 - In session-based login, the `identity` (e.g., `userId`) is stored in the session (`req.session`) after login.
 - The `isOwner` function compares the `userId` from the session with the resource ID (`req.params.id`) to confirm ownership.
 - Database verification is optional and depends on your application's security requirements. Query the database if you need to verify user roles, permissions, or status.
+

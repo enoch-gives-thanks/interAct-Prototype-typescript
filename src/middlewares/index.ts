@@ -51,9 +51,11 @@ export const isAuthenticated = async (
             res.sendStatus(403);
             return;
         }
-
-        // Merge user information into the response object
-        merge(res, { identity: existingUser });
+        // Base on the session from the cookies,
+        // we injected the identity to the request message for 
+        // the process happens down the pipeline
+        // Merge user information into the request object
+        merge(req, { identity: existingUser });
 
         // Call the next middleware function
         next();
