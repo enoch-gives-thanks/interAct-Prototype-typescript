@@ -10,11 +10,14 @@
 
   pnpm add -D nodemon
   ```
-  Nodemon is a development tool that automatically restarts a Node.js application whenever file changes are detected in the project.
+  Nodemon is a development tool that automatically restarts a Node.js application whenever file
+  changes are detected in the project.
 
 ### config typescript
   Create tsconfig.json at root folder (layer 0)
-  This is a TypeScript configuration file (tsconfig.json) that specifies how the TypeScript compiler (tsc) should behave and how it should compile your TypeScript code. Let’s go through each setting, line by line.
+  This is a TypeScript configuration file (tsconfig.json) that specifies how the TypeScript compiler
+  (tsc) should behave and how it should compile your TypeScript code. Let’s go through each setting,
+  line by line.
   ```json
   {
       "compilerOptions": {
@@ -31,13 +34,16 @@
   ```
 #### config typescript explaination
   compilerOptions
-  The compilerOptions section contains all configuration options that control how TypeScript compiles your code.
+  The compilerOptions section contains all configuration options that control how TypeScript
+  compiles your code.
 
 ##### 1. "module": "NodeNext"
   Specifies the module system to be used during compilation.
   NodeNext:
   Introduced in TypeScript 4.7, it aligns with Node.js's native ESM and CommonJS module support.
-  It allows TypeScript to handle .js, .ts, .mjs, and .cjs files as modules according to the conditions in the package.json file (e.g., "type": "module" for ESM or "type": "commonjs" for CommonJS).
+  It allows TypeScript to handle .js, .ts, .mjs, and .cjs files as modules according to the
+  conditions in the package.json file (e.g., "type": "module" for ESM or "type": "commonjs" for
+  CommonJS).
 ##### 2. "moduleResolution": "nodenext"
   Specifies how TypeScript should resolve module imports (e.g., import or require).
   node:
@@ -45,7 +51,9 @@
   Looks for modules in node_modules.
   Resolves relative imports (./, ../) and absolute imports based on the baseUrl.
   Handles extensions like .js, .ts, .json, etc.
-  This error occurs because when you set the **`module`** option to `"NodeNext"`, the **`moduleResolution`** option must also be either `"NodeNext"` (or left unspecified, which defaults to `"NodeNext"` when `module` is `"NodeNext"`).
+  This error occurs because when you set the **`module`** option to `"NodeNext"`, the
+  **`moduleResolution`** option must also be either `"NodeNext"` (or left unspecified, which
+  defaults to `"NodeNext"` when `module` is `"NodeNext"`).
 
   originally in your configuration, you likely have this:
 
@@ -60,7 +68,8 @@
   ```
 
 ###### **Solution**
-  To fix this error, change the `moduleResolution` option to `"NodeNext"`, or remove it entirely so TypeScript can infer it automatically.
+  To fix this error, change the `moduleResolution` option to `"NodeNext"`, or remove it entirely so
+  TypeScript can infer it automatically.
 
 ###### Corrected `tsconfig.json`:
   ```json
@@ -96,32 +105,39 @@
 
 ###### **Why This Happens**
   - The **`"NodeNext"`** module system uses Node.js's **ESM and CommonJS interoperability**.
-  - When `"module": "NodeNext"` is set, TypeScript requires **`moduleResolution`** to match the same logic, i.e., `"NodeNext"`.
-  - If you set `"moduleResolution": "node"`, it conflicts because `"node"` uses an older resolution strategy incompatible with the `"NodeNext"` module format.
+  - When `"module": "NodeNext"` is set, TypeScript requires **`moduleResolution`** to match the same
+  logic, i.e., `"NodeNext"`.
+  - If you set `"moduleResolution": "node"`, it conflicts because `"node"` uses an older resolution
+  strategy incompatible with the `"NodeNext"` module format.
 
   ---
 
 ###### **What Do These Options Mean?**
 
   1. **`module: "NodeNext"`**:
-     - Indicates that TypeScript should treat files as **ES modules (ESM)** or **CommonJS** based on file extensions:
+     - Indicates that TypeScript should treat files as **ES modules (ESM)** or **CommonJS** based on
+     file extensions:
        - `.mjs` and `.mts`: Always treated as ESM.
        - `.cjs` and `.cts`: Always treated as CommonJS.
-       - `.js` and `.ts`: Treated as ESM or CommonJS depending on the `"type"` field in `package.json`.
+       - `.js` and `.ts`: Treated as ESM or CommonJS depending on the `"type"` field in
+       `package.json`.
 
   2. **`moduleResolution: "NodeNext"`**:
      - Uses Node.js’s modern resolution strategy for ESM and CommonJS.
-     - Resolves imports based on the file extensions and `package.json` settings (like `"exports"` and `"type"`).
+     - Resolves imports based on the file extensions and `package.json` settings (like `"exports"`
+     and `"type"`).
 
   ---
 
 ###### **Key Takeaway**
-  When using `"module": "NodeNext"`, always use `"moduleResolution": "NodeNext"`, or leave it unspecified so TypeScript can infer the correct resolution strategy.
+  When using `"module": "NodeNext"`, always use `"moduleResolution": "NodeNext"`, or leave it
+  unspecified so TypeScript can infer the correct resolution strategy.
 
 ##### 3. "baseUrl": "src"
   Sets the base directory for resolving non-relative module imports.
   "src":
-  This means any non-relative import (e.g., import myModule from "utils";) will be resolved relative to the src folder.
+  This means any non-relative import (e.g., import myModule from "utils";) will be resolved relative
+  to the src folder.
   Simplifies imports by avoiding long relative paths like ../../../utils.
 ##### 4. "outDir": "dist"
   Specifies the output directory where the compiled JavaScript files will be placed.
@@ -133,9 +149,11 @@
   Generates source maps for your TypeScript files.
   Source Maps:
   These files map the compiled JavaScript code back to the original TypeScript code.
-  Useful for debugging, as they allow you to view and debug the original TypeScript code in tools like Chrome DevTools.
+  Useful for debugging, as they allow you to view and debug the original TypeScript code in tools
+  like Chrome DevTools.
 ##### 6. "noImplicitAny": true
-  Ensures that all variables, parameters, and return types must have an explicit type, and TypeScript will not infer the any type implicitly.
+  Ensures that all variables, parameters, and return types must have an explicit type, and
+  TypeScript will not infer the any type implicitly.
   Example:
    - With "noImplicitAny": true:
   ```ts
@@ -165,10 +183,12 @@
       "compilerOptions": {
           "module": "NodeNext",                // Uses Node.js's ESM/CommonJS module system.
           "moduleResolution": "node",         // Resolves modules using Node.js's strategy.
-          "baseUrl": "src",                   // Non-relative imports are resolved relative to 'src'.
+          "baseUrl": "src",                   // Non-relative imports are resolved relative to
+  'src'.
           "outDir": "dist",                   // Compiled JavaScript files are output to 'dist'.
           "sourceMap": true,                  // Generates source maps for debugging.
-          "noImplicitAny": true               // Enforces explicit typing, disallowing implicit 'any'.
+          "noImplicitAny": true               // Enforces explicit typing, disallowing implicit
+  'any'.
       },
       "include": ["src/**/*"]                 // Includes all files in 'src' for compilation.
   }
@@ -214,7 +234,9 @@
   }
   ```
 ##### Conclusion
-  This configuration is tailored for a Node.js project using modern module systems (ESM and CommonJS). It enforces strict typing, organizes output files, and simplifies imports, making it a robust setup for a TypeScript project.
+  This configuration is tailored for a Node.js project using modern module systems (ESM and
+  CommonJS). It enforces strict typing, organizes output files, and simplifies imports, making it a
+  robust setup for a TypeScript project.
 
 ### config nodemon
   ```json
@@ -225,7 +247,9 @@
   }
   ```
 
-  This is a **`nodemon.json` configuration file** that customizes **Nodemon's behavior** for your project. It defines what files to watch, which file extensions to monitor, and what command to execute when files change.
+  This is a **`nodemon.json` configuration file** that customizes **Nodemon's behavior** for your
+  project. It defines what files to watch, which file extensions to monitor, and what command to
+  execute when files change.
 
   Let’s break it down line-by-line:
 
@@ -233,14 +257,16 @@
 
 ##### **1. `"watch": ["src"]`**
   - This tells Nodemon to **watch** the `src` directory for changes.
-  - Whenever any file inside the `src` folder (or its subdirectories) changes, Nodemon will restart the specified process.
+  - Whenever any file inside the `src` folder (or its subdirectories) changes, Nodemon will restart
+  the specified process.
 
 ###### **What It Does:**
   - Monitors the `src` folder recursively for file changes.
   - Only files or folders listed in the `watch` array will be tracked.
 
 ###### **Example:**
-  If a file like `src/index.ts` or `src/utils/helper.ts` is modified, Nodemon will restart the process.
+  If a file like `src/index.ts` or `src/utils/helper.ts` is modified, Nodemon will restart the
+  process.
 
   ---
 
@@ -253,7 +279,8 @@
   - **`.js`**: It also restarts the process if a JavaScript file (`.js`) changes.
 
 ###### **Why Combine `.ts` and `.js`?**
-  - This is useful in projects where both TypeScript (`.ts`) and compiled JavaScript (`.js`) files coexist.
+  - This is useful in projects where both TypeScript (`.ts`) and compiled JavaScript (`.js`) files
+  coexist.
   - For example:
     - You might be writing TypeScript code, but some parts of the project still rely on JavaScript.
     - Or, you might be debugging compiled `.js` files generated by TypeScript.
@@ -270,13 +297,16 @@
 ###### **What It Does:**
   - Runs the `ts-node` command on the `./src/index.ts` file.
   - **`ts-node`**:
-    - A tool that allows you to directly execute TypeScript files without compiling them to JavaScript first.
+    - A tool that allows you to directly execute TypeScript files without compiling them to
+    JavaScript first.
     - It compiles TypeScript to JavaScript in-memory and runs it immediately.
   - **`./src/index.ts`**:
-    - This is the entry point of your application (likely a `ts` file, but the path might be incorrect; see below).
+    - This is the entry point of your application (likely a `ts` file, but the path might be
+    incorrect; see below).
 
 ###### **Why Use `ts-node`?**
-  - It allows you to run TypeScript files directly, without needing to manually compile them to JavaScript using `tsc` (TypeScript Compiler).
+  - It allows you to run TypeScript files directly, without needing to manually compile them to
+  JavaScript using `tsc` (TypeScript Compiler).
   - Great for development workflows where you want rapid iteration.
 
   ---
@@ -290,7 +320,8 @@
   2. **Restart on `.ts` or `.js` file changes**:
      - Nodemon restarts the process whenever a file with the `.ts` or `.js` extension is modified.
   3. **Execute `ts-node`**:
-     - When a file change is detected, Nodemon runs the `ts-node` command to execute `./src/index.ts` (or the equivalent entry point).
+     - When a file change is detected, Nodemon runs the `ts-node` command to execute
+     `./src/index.ts` (or the equivalent entry point).
 
   ---
 
@@ -314,7 +345,8 @@
   This configuration is ideal for a **TypeScript project** where:
   - You are actively developing in TypeScript (`.ts`) files.
   - You want to directly run TypeScript code using `ts-node` without pre-compiling it to JavaScript.
-  - You might also have some `.js` files in your project (e.g., legacy code or external scripts) that you want to track.
+  - You might also have some `.js` files in your project (e.g., legacy code or external scripts)
+  that you want to track.
 
   ---
 
@@ -327,7 +359,8 @@
 
 ##### **Conclusion**
   This `nodemon.json` helps streamline the development process for a TypeScript project by:
-  - Automatically restarting the application whenever `.ts` or `.js` files in the `src` folder change.
+  - Automatically restarting the application whenever `.ts` or `.js` files in the `src` folder
+  change.
   - Leveraging `ts-node` to avoid pre-compiling TypeScript files, saving time during development.
 
   By ensuring the correct configuration, you'll have a smoother TypeScript development workflow!
@@ -448,7 +481,8 @@
       username: {type: String, required: true},
       email: {type: String, required: true},
       authentication:{
-          password: {type: String, required: true, select: false},// we don't want to fetch user info along with their authentication data
+          password: {type: String, required: true, select: false},// we don't want to fetch user
+info along with their authentication data
           salt: {type:String, select: false},
           sessionToken: {type: String, select:false},
       }
@@ -458,9 +492,11 @@
 
   export const getUsers = () => UserModel.find();
   export const getUserByEmail = (email:string) => UserModel.findOne({email});
-  export const getUserBySessionToken = (sessionToken:String) => UserModel.findOne({'authentication.sessionToken': sessionToken,})
+  export const getUserBySessionToken = (sessionToken:String) =>
+UserModel.findOne({'authentication.sessionToken': sessionToken,})
   export const getUserById = (id: string) => UserModel.findById(id);
-  export const createUser = (values: Record<string, any>) => new UserModel(values).save().then(user => user.toObject());
+  export const createUser = (values: Record<string, any>) => new UserModel(values).save().then(user
+=> user.toObject());
   export const deleteUserById = (id: string) => UserModel.findOneAndDelete({_id: id});
   export const updateUserById = (id: string, values: Record<string, any>) => {
       return UserModel.findOneAndUpdate(
@@ -478,7 +514,8 @@
   ```typescript
   import mongoose from 'mongoose';
   ```
-  - **Imports the `mongoose` library**: This is used to interact with a MongoDB database in a structured way using schemas and models.
+  - **Imports the `mongoose` library**: This is used to interact with a MongoDB database in a
+  structured way using schemas and models.
 
   ---
 
@@ -489,9 +526,12 @@
       username: {type: String, required: true},
       email: {type: String, required: true},
       authentication:{
-          password: {type: String, required: true, select: false}, // Do not include `password` in query results by default
-          salt: {type:String, select: false},                      // Do not include `salt` in query results by default
-          sessionToken: {type: String, select:false},              // Do not include `sessionToken` in query results by default
+          password: {type: String, required: true, select: false}, // Do not include `password` in
+query results by default
+          salt: {type:String, select: false},                      // Do not include `salt` in query
+results by default
+          sessionToken: {type: String, select:false},              // Do not include `sessionToken`
+in query results by default
       }
   });
   ```
@@ -500,11 +540,13 @@
      - `username`: A required `String` field.
      - `email`: Another required `String` field.
      - `authentication`: A nested object that stores sensitive authentication details like:
-       - `password`: The user's hashed password (not included in query results by default due to `select: false`).
+       - `password`: The user's hashed password (not included in query results by default due to
+       `select: false`).
        - `salt`: The salt used to hash the password (also excluded from query results).
        - `sessionToken`: A token for maintaining user sessions (also excluded from query results).
 
-     > **Note**: `select: false` ensures sensitive fields like `password`, `salt`, and `sessionToken` are not fetched unless explicitly requested in the query.
+     > **Note**: `select: false` ensures sensitive fields like `password`, `salt`, and
+     > `sessionToken` are not fetched unless explicitly requested in the query.
 
   ---
 
@@ -514,8 +556,10 @@
   export const UserModel = mongoose.model('User', UserSchema);
   ```
 
-  - **Creates the `User` model**: This connects the `UserSchema` to the `User` collection in your MongoDB database.
-  - The `UserModel` is used to perform actions (e.g., CRUD operations) on documents in the `User` collection.
+  - **Creates the `User` model**: This connects the `UserSchema` to the `User` collection in your
+  MongoDB database.
+  - The `UserModel` is used to perform actions (e.g., CRUD operations) on documents in the `User`
+  collection.
 
   ---
 
@@ -535,13 +579,15 @@
   export const getUserByEmail = (email: string) => UserModel.findOne({email});
   ```
   - **Fetch a single user by their email address**:
-    - `findOne({ email })`: Finds the first document where the `email` field matches the provided value.
+    - `findOne({ email })`: Finds the first document where the `email` field matches the provided
+    value.
 
   ---
 
 #### **3. Get a User by Session Token**
   ```typescript
-  export const getUserBySessionToken = (sessionToken: String) => UserModel.findOne({'authentication.sessionToken': sessionToken});
+  export const getUserBySessionToken = (sessionToken: String) =>
+UserModel.findOne({'authentication.sessionToken': sessionToken});
   ```
   - **Fetch a user by their session token**:
     - Searches for a document where the `authentication.sessionToken` field matches the given token.
@@ -553,7 +599,8 @@
   export const getUserById = (id: string) => UserModel.findById(id);
   ```
   - **Fetch a user by their unique ID**:
-    - Uses `findById(id)` to retrieve a document by its `_id` field (MongoDB's unique identifier for documents).
+    - Uses `findById(id)` to retrieve a document by its `_id` field (MongoDB's unique identifier for
+    documents).
 
   ---
 
@@ -565,7 +612,8 @@
   - **Create and save a new user**:
     - `new UserModel(values)`: Creates a new instance of the `UserModel` with the provided data.
     - `.save()`: Saves the new document to the database.
-    - `.then(user => user.toObject())`: Converts the returned Mongoose document to a plain JavaScript object (removing Mongoose-specific metadata).
+    - `.then(user => user.toObject())`: Converts the returned Mongoose document to a plain
+    JavaScript object (removing Mongoose-specific metadata).
 
   ---
 
@@ -591,13 +639,15 @@
   - **Update a user's details by their ID**:
     - `{ _id: id }`: The filter to find the user by their `_id`.
     - `{ $set: values }`: Specifies the fields to update.
-    - `{ new: true }`: Ensures the updated document is returned after the update (by default, Mongoose returns the document as it was before the update).
+    - `{ new: true }`: Ensures the updated document is returned after the update (by default,
+    Mongoose returns the document as it was before the update).
 
   ---
 
 #### **Summary**
 
-  This code defines a reusable **User schema and model** for a MongoDB database using Mongoose. It provides utility functions for common operations:
+  This code defines a reusable **User schema and model** for a MongoDB database using Mongoose. It
+  provides utility functions for common operations:
 
   1. **Get Users**:
      - Retrieve all users or specific users by email, session token, or ID.
@@ -608,13 +658,16 @@
   4. **Update User**:
      - Modify a user's data by their ID.
 
-  The schema uses `select: false` for sensitive fields like `password`, `salt`, and `sessionToken`, ensuring they are not returned in queries unless explicitly requested. This is a **best practice** for security in database design.
+  The schema uses `select: false` for sensitive fields like `password`, `salt`, and `sessionToken`,
+  ensuring they are not returned in queries unless explicitly requested. This is a **best practice**
+  for security in database design.
 
 
 
 ## create helper folder and its index.ts for authetication
   ```powershell
-  New-Item -ItemType Directory -Path src\helpers -Force; New-Item -ItemType File -Path src\helpers\index.ts
+  New-Item -ItemType Directory -Path src\helpers -Force; New-Item -ItemType File -Path
+src\helpers\index.ts
   ```
   ```sh
   mkdir -p src/helpers && touch src/helpers/index.ts
@@ -632,15 +685,18 @@
   ```ts
   cryto.createHmac('sha256', [salt, password].join('/')).update(SECRET).digest('hex');
   ```
-  of code is using the Node.js `crypto` module to generate a hashed output (in hexadecimal format) based on a combination of a salt, a password, and a secret key. Let's break it down step by step:
+  of code is using the Node.js `crypto` module to generate a hashed output (in hexadecimal format)
+  based on a combination of a salt, a password, and a secret key. Let's break it down step by step:
 
   ```javascript
   return crypto.createHmac('sha256', [salt, password].join('/')).update(SECRET).digest('hex');
   ```
 
 ### 1. `crypto.createHmac('sha256', [salt, password].join('/'))`
-  - **`crypto.createHmac`**: This method creates an HMAC (Hash-based Message Authentication Code) using a specified hash function and a key.
-  - **`'sha256'`**: This specifies the hash algorithm used, in this case, SHA-256 (a secure hashing algorithm).
+  - **`crypto.createHmac`**: This method creates an HMAC (Hash-based Message Authentication Code)
+  using a specified hash function and a key.
+  - **`'sha256'`**: This specifies the hash algorithm used, in this case, SHA-256 (a secure hashing
+  algorithm).
   - **`[salt, password].join('/')`**:
     - `[salt, password]` creates an array containing the `salt` and `password` values.
     - `.join('/')` combines the two values into a single string, separated by a `/`. For example:
@@ -653,10 +709,13 @@
     - This combined string is used as the **key** for the HMAC.
 
 ### 2. `.update(SECRET)`
-  - **`update(SECRET)`**: This method specifies the data to be hashed using the HMAC. The `SECRET` value is the input data provided for hashing. For example, this could be a secret key or some sensitive information.
+  - **`update(SECRET)`**: This method specifies the data to be hashed using the HMAC. The `SECRET`
+  value is the input data provided for hashing. For example, this could be a secret key or some
+  sensitive information.
 
 ### 3. `.digest('hex')`
-  - **`digest('hex')`**: This finalizes the HMAC computation and outputs the result as a hexadecimal string. The hexadecimal format is a common way of representing hashed data.
+  - **`digest('hex')`**: This finalizes the HMAC computation and outputs the result as a hexadecimal
+  string. The hexadecimal format is a common way of representing hashed data.
 
 ### What does this line do overall?
   1. It creates an HMAC using:
@@ -685,7 +744,8 @@
 
 ### Why is this useful?
   This kind of hashing is typically used for:
-  - **Password hashing**: Combining a salt and password ensures that even if two users have the same password, their hashed values will be different.
+  - **Password hashing**: Combining a salt and password ensures that even if two users have the same
+  password, their hashed values will be different.
   - **Data integrity**: HMAC ensures that data cannot be tampered with without the key.
   - **Authentication**: It is useful for verifying the authenticity of data or messages.
 
@@ -693,12 +753,15 @@
   1. **Security Best Practices**:
      - Ensure `salt` is unique for each user or piece of data.
      - Use a strong, randomly generated `SECRET` key.
-  2. **Hashing Passwords**: If this is being used for password hashing, consider using specialized libraries like `bcrypt` or `argon2`, as they are specifically designed for securely hashing passwords.
+  2. **Hashing Passwords**: If this is being used for password hashing, consider using specialized
+     libraries like `bcrypt` or `argon2`, as they are specifically designed for securely hashing
+  passwords.
 
 
 ## create routing for authetication in controllers
   ```powershell
-  New-Item -ItemType Directory -Path src\controllers -Force; New-Item -ItemType File -Path src\controllers\authentication.ts
+  New-Item -ItemType Directory -Path src\controllers -Force; New-Item -ItemType File -Path
+src\controllers\authentication.ts
   ```
   ```sh
   mkdir -p src/controllers && touch src/controllers/authentication.ts
@@ -721,7 +784,8 @@
 
           if(!email || !password || !username){
               res.status(400).json({ error: 'Missing required fields' });
-              return ; // the return statements are used to exit the function early and prevent further execution
+              return ; // the return statements are used to exit the function early and prevent
+further execution
           }
 
           const existingUser = await getUserByEmail(email);
@@ -756,7 +820,8 @@
 ## create a route
 
   ```powershell
-  New-Item -ItemType Directory -Path src\router -Force; New-Item -ItemType File -Path src\router\index.ts
+  New-Item -ItemType Directory -Path src\router -Force; New-Item -ItemType File -Path
+src\router\index.ts
   ```
   ```sh
   mkdir -p src/router && touch src/router/index.ts
@@ -773,7 +838,8 @@
 
 ### Create router authentication
   ```powershell
-  New-Item -ItemType Directory -Path src\router; New-Item -ItemType File -Path src\router\authentication.ts
+  New-Item -ItemType Directory -Path src\router; New-Item -ItemType File -Path
+src\router\authentication.ts
   ```
   ```sh
   mkdir -p src/router && touch src/router/authentication.ts
@@ -853,7 +919,8 @@
           "email": "abc@gmail.com",
           "authentication": {
               "password": "978eb94ad5e60c9ffcb2831c385d275a0225a18168c73ad7b8af7d2fc3d74012",
-              "salt": "LGbxwPdisavIBa6zG7uBo9jKMCpl52qjjiW7gcDoWdftq3Urw5TKnmhNvKqq/vI2tjxdIWADomr7o6BycNdWQjNzlaLJ6jamvTOv944X9jtR7McRBJwBcgtiPeBHS7Jy+VwRJIPYAZv02D80IBrXCzm3WJ7jQJCtZRN8Uj9nx2I="
+              "salt":
+  "LGbxwPdisavIBa6zG7uBo9jKMCpl52qjjiW7gcDoWdftq3Urw5TKnmhNvKqq/vI2tjxdIWADomr7o6BycNdWQjNzlaLJ6jamvTOv944X9jtR7McRBJwBcgtiPeBHS7Jy+VwRJIPYAZv02D80IBrXCzm3WJ7jQJCtZRN8Uj9nx2I="
           },
           "_id": "67498512ef98b90871cf583e",
           "__v": 0
@@ -871,7 +938,8 @@
     "email": "abc@gmail.com",
     "authentication": {
       "password": "6b8c6c4019e50e04e6e09465adbd55ff308a44d6a21122fe34e0e4c33674db5e",
-      "salt": "nB7EVkFDKQAk41vYLm6ica9NclWnIM3/nWjKl2fNa64wuoadM+QZTJ/H8o0FpXtsUZ7w6bv0EAXkl+YTY/pc2ozCKyorsSiTTHBizwPPGt0VZMcgetoUPmM9IBddXB5jJIYuc6zg7A1LVnR1nzqnnIy15QgT6/0Qz3XWa/OQ/b4="
+      "salt":
+      "nB7EVkFDKQAk41vYLm6ica9NclWnIM3/nWjKl2fNa64wuoadM+QZTJ/H8o0FpXtsUZ7w6bv0EAXkl+YTY/pc2ozCKyorsSiTTHBizwPPGt0VZMcgetoUPmM9IBddXB5jJIYuc6zg7A1LVnR1nzqnnIy15QgT6/0Qz3XWa/OQ/b4="
     },
     "__v": 0
   }
@@ -899,19 +967,24 @@
       }
 
       // check if there is a user with the email provided
-      const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
-      // .select(): This method is used to specify which fields should be included or excluded in the query result. This is common in ORMs like Mongoose.
+      const user = await getUserByEmail(email).select('+authentication.salt
++authentication.password');
+      // .select(): This method is used to specify which fields should be included or excluded in
+the query result. This is common in ORMs like Mongoose.
       // '+authentication.salt +authentication.password':
-      // In some ORMs (e.g., Mongoose), fields can be excluded by default for security reasons (e.g., sensitive information like passwords, salts, etc.).
+      // In some ORMs (e.g., Mongoose), fields can be excluded by default for security reasons
+(e.g., sensitive information like passwords, salts, etc.).
       // The + symbol explicitly includes fields that are normally excluded.
-      // Here, the query is explicitly requesting the authentication.salt and authentication.password fields, which might have been marked as excluded in the schema definition.
+      // Here, the query is explicitly requesting the authentication.salt and
+authentication.password fields, which might have been marked as excluded in the schema definition.
 
       if(!user){
         return res.sendStatus(400);
       }
       // check password word by comparing the hash and the database
 
-      const expectedHash = authentication(user.authentication.salt, password); // authenication hash the password with the salt and secret
+      const expectedHash = authentication(user.authentication.salt, password); // authenication hash
+the password with the salt and secret
       if(user.authentcation.password !== expectedHash){
         return res.sendStatus(403);
       }
@@ -969,31 +1042,44 @@
   // }
   ```
 
-#### explain this line => const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
+#### explain this line => const user = await getUserByEmail(email).select('+authentication.salt
++authentication.password');
 
-  This line of code is a JavaScript/TypeScript snippet, likely used in a Node.js or similar backend environment, where the **`getUserByEmail` function** is used to fetch a user object from a database, typically through an **ORM** (Object-Relational Mapper) like **Mongoose** (used with MongoDB). Let's break it down step by step:
+  This line of code is a JavaScript/TypeScript snippet, likely used in a Node.js or similar backend
+  environment, where the **`getUserByEmail` function** is used to fetch a user object from a
+  database, typically through an **ORM** (Object-Relational Mapper) like **Mongoose** (used with
+  MongoDB). Let's break it down step by step:
 
   ---
 
 #### **1. `const user = await getUserByEmail(email)`**
-  - **`getUserByEmail(email)`**: This function is called to fetch the user data associated with the given email address. It's likely querying a database for a user record.
-  - **`await`**: The use of `await` indicates that `getUserByEmail` is an **asynchronous function** (returns a `Promise`). This means the code will wait for the function to resolve before assigning the result to `user`.
+  - **`getUserByEmail(email)`**: This function is called to fetch the user data associated with the
+  given email address. It's likely querying a database for a user record.
+  - **`await`**: The use of `await` indicates that `getUserByEmail` is an **asynchronous function**
+  (returns a `Promise`). This means the code will wait for the function to resolve before assigning
+  the result to `user`.
   - **`const user`**: The result of the asynchronous call is stored in the `user` variable.
 
   ---
 
 #### **2. `.select('+authentication.salt +authentication.password')`**
-  - **`.select()`**: This method is used to specify which fields should be included or excluded in the query result. This is common in ORMs like **Mongoose**.
+  - **`.select()`**: This method is used to specify which fields should be included or excluded in
+  the query result. This is common in ORMs like **Mongoose**.
 
   - **`'+authentication.salt +authentication.password'`**:
-    - In some ORMs (e.g., Mongoose), fields can be **excluded by default** for security reasons (e.g., sensitive information like passwords, salts, etc.).
+    - In some ORMs (e.g., Mongoose), fields can be **excluded by default** for security reasons
+    (e.g., sensitive information like passwords, salts, etc.).
     - The `+` symbol explicitly includes fields that are normally excluded.
-    - Here, the query is explicitly requesting the `authentication.salt` and `authentication.password` fields, which might have been marked as excluded in the schema definition.
+    - Here, the query is explicitly requesting the `authentication.salt` and
+    `authentication.password` fields, which might have been marked as excluded in the schema
+    definition.
 
   ---
 
 #### **What does this do in practice?**
-  The code fetches a user object from the database based on the email address and explicitly includes the sensitive fields `authentication.salt` and `authentication.password` in the result, even if those fields are excluded by default in the database schema or query configuration.
+  The code fetches a user object from the database based on the email address and explicitly
+  includes the sensitive fields `authentication.salt` and `authentication.password` in the result,
+  even if those fields are excluded by default in the database schema or query configuration.
 
   ---
 
@@ -1037,14 +1123,17 @@
   ---
 
 #### **Why Use `.select()`?**
-  - Improves **security**: Sensitive data (like passwords or salts) is excluded from queries by default.
-  - Provides **flexibility**: You can selectively include sensitive data when needed (e.g., for authentication purposes).
+  - Improves **security**: Sensitive data (like passwords or salts) is excluded from queries by
+  default.
+  - Provides **flexibility**: You can selectively include sensitive data when needed (e.g., for
+  authentication purposes).
 
   ---
 
 #### **Important Note**
   You should always handle sensitive data like passwords and salts securely:
-  - Never store plain-text passwords in a database; always hash them using secure algorithms like **bcrypt** or **argon2**.
+  - Never store plain-text passwords in a database; always hash them using secure algorithms like
+  **bcrypt** or **argon2**.
   - Avoid exposing sensitive data (like salts and password hashes) in API responses.
 
 
@@ -1064,11 +1153,13 @@
           res.sendStatus(400);
           return
         }
-        // it is very important to have this because the default query would not include salt and password
+        // it is very important to have this because the default query would not include salt and
+password
         // allow you to get user.authentication.salt and user.authentication.password
 
         // get the user object fromthe  email information
-        const user = await getUserByEmail(email).select('+authentication.salt +authentication.password');
+        const user = await getUserByEmail(email).select('+authentication.salt
++authentication.password');
 
         if(!user){
           res.sendStatus(400);
@@ -1088,11 +1179,13 @@
         user.authentication.sessionToken = authentication(salt, user._id.toString());
         // store the sessionToken to the database
         // so if there is a post or get https request
-        // you only need to check the sessionToken inside the https header (encrypted by https protocol)
+        // you only need to check the sessionToken inside the https header (encrypted by https
+protocol)
         await user.save();
 
         // set the session to cookie using http header
-        res.cookie('INTERACT-AUTH',  user.authentication.sessionToken, {domain: 'localhost', path: '/'});
+        res.cookie('INTERACT-AUTH',  user.authentication.sessionToken, {domain: 'localhost', path:
+'/'});
 
         res.status(200).json(user).end();
         return;
@@ -1106,7 +1199,8 @@
   // export const register = ...
   ```
 
-  In the router authentication.ts folder update src/router/authentication.ts using the newly created login function
+  In the router authentication.ts folder update src/router/authentication.ts using the newly created
+  login function
 
   ```ts
   //..
@@ -1124,67 +1218,111 @@
   ```
 
 #### Explaination of how cookies, session and http header works:
-  Cookies, sessions, and HTTP headers are fundamental concepts in web development and play important roles in managing user state and transmitting information between the client (usually a web browser) and the server. Let's dive into each of them:
+  Cookies, sessions, and HTTP headers are fundamental concepts in web development and play important
+  roles in managing user state and transmitting information between the client (usually a web
+  browser) and the server. Let's dive into each of them:
 
   1. Cookies:
      - Cookies are small pieces of data stored on the client-side by websites.
-     - When a server sends a response to a client, it can include a `Set-Cookie` header, which instructs the browser to store the cookie.
-     - Cookies are typically used to store user preferences, authentication tokens, or session identifiers.
+     - When a server sends a response to a client, it can include a `Set-Cookie` header, which
+     instructs the browser to store the cookie.
+     - Cookies are typically used to store user preferences, authentication tokens, or session
+     identifiers.
      - Each cookie has a name, value, expiration date, and other optional attributes.
-     - When the client sends subsequent requests to the same domain, it includes the stored cookies in the `Cookie` header of the request.
-     - Servers can read the cookies from the request headers to identify the user and maintain state across requests.
-     - Cookies have a size limit (usually around 4KB) and can be set with an expiration date or as session cookies (deleted when the browser is closed).
+     - When the client sends subsequent requests to the same domain, it includes the stored cookies
+     in the `Cookie` header of the request.
+     - Servers can read the cookies from the request headers to identify the user and maintain state
+     across requests.
+     - Cookies have a size limit (usually around 4KB) and can be set with an expiration date or as
+     session cookies (deleted when the browser is closed).
 
   2. Sessions:
-     - Sessions are server-side storage mechanisms used to persist data across multiple requests from the same client.
-     - When a user logs in or starts a session, the server creates a unique session identifier (session ID) and sends it to the client as a cookie.
-     - The server maintains a mapping between the session ID and the associated session data, which can include user information, preferences, or any other relevant data.
-     - On subsequent requests, the client sends the session ID cookie, allowing the server to retrieve the corresponding session data.
-     - Sessions are commonly used for user authentication, shopping carts, or any scenario where data needs to be maintained across requests.
-     - Session data is stored on the server-side and can be stored in memory, files, or databases, depending on the server's configuration.
+     - Sessions are server-side storage mechanisms used to persist data across multiple requests
+     from the same client.
+     - When a user logs in or starts a session, the server creates a unique session identifier
+     (session ID) and sends it to the client as a cookie.
+     - The server maintains a mapping between the session ID and the associated session data, which
+     can include user information, preferences, or any other relevant data.
+     - On subsequent requests, the client sends the session ID cookie, allowing the server to
+     retrieve the corresponding session data.
+     - Sessions are commonly used for user authentication, shopping carts, or any scenario where
+     data needs to be maintained across requests.
+     - Session data is stored on the server-side and can be stored in memory, files, or databases,
+     depending on the server's configuration.
 
   3. HTTP Headers:
-     - HTTP headers are key-value pairs included in the header section of HTTP requests and responses.
-     - Headers provide additional information about the request or response, such as the content type, encoding, cache control, authentication tokens, and more.
+     - HTTP headers are key-value pairs included in the header section of HTTP requests and
+     responses.
+     - Headers provide additional information about the request or response, such as the content
+     type, encoding, cache control, authentication tokens, and more.
      - Some commonly used headers include:
-       - `Content-Type`: Specifies the media type of the request or response body (e.g., `application/json`, `text/html`).
+       - `Content-Type`: Specifies the media type of the request or response body (e.g.,
+       `application/json`, `text/html`).
        - `Authorization`: Contains authentication credentials, such as tokens or basic auth details.
-       - `Cache-Control`: Controls caching behavior, indicating whether the response can be cached and for how long.
+       - `Cache-Control`: Controls caching behavior, indicating whether the response can be cached
+       and for how long.
        - `Cookie`: Contains the cookies sent by the client to the server.
        - `Set-Cookie`: Used by the server to instruct the client to store cookies.
      - Headers are extensible, and developers can define custom headers for specific purposes.
-     - HTTP headers are essential for controlling various aspects of the communication between the client and the server, such as authentication, caching, content negotiation, and more.
+     - HTTP headers are essential for controlling various aspects of the communication between the
+     client and the server, such as authentication, caching, content negotiation, and more.
 
-  Cookies, sessions, and HTTP headers work together to enable stateful communication and user-specific functionality in web applications. Cookies are used to store small amounts of data on the client-side, sessions allow the server to maintain user state across requests, and HTTP headers provide additional information and control over the request-response cycle.
+  Cookies, sessions, and HTTP headers work together to enable stateful communication and
+  user-specific functionality in web applications. Cookies are used to store small amounts of data
+  on the client-side, sessions allow the server to maintain user state across requests, and HTTP
+  headers provide additional information and control over the request-response cycle.
 
-  Understanding how these concepts interact is crucial for building secure, scalable, and user-friendly web applications. Proper handling of cookies, sessions, and headers is essential for authentication, authorization, and managing user state effectively.
+  Understanding how these concepts interact is crucial for building secure, scalable, and
+  user-friendly web applications. Proper handling of cookies, sessions, and headers is essential for
+  authentication, authorization, and managing user state effectively.
 
 #### Explaination of how session token works:
-  The session token itself is not typically encrypted when transmitted in HTTP headers. However, it is highly recommended to use HTTPS (HTTP Secure) to encrypt the entire communication channel between the client and the server, including the session token and other sensitive data transmitted in headers or request/response bodies.
+  The session token itself is not typically encrypted when transmitted in HTTP headers. However, it
+  is highly recommended to use HTTPS (HTTP Secure) to encrypt the entire communication channel
+  between the client and the server, including the session token and other sensitive data
+  transmitted in headers or request/response bodies.
 
-  When using HTTP without encryption, the session token is sent in plain text over the network, making it vulnerable to interception and unauthorized access by attackers who can eavesdrop on the network traffic. This can lead to session hijacking attacks, where an attacker gains access to a user's session by stealing their session token.
+  When using HTTP without encryption, the session token is sent in plain text over the network,
+  making it vulnerable to interception and unauthorized access by attackers who can eavesdrop on the
+  network traffic. This can lead to session hijacking attacks, where an attacker gains access to a
+  user's session by stealing their session token.
 
-  On the other hand, when using HTTPS, the communication between the client and the server is encrypted using SSL/TLS (Secure Socket Layer/Transport Layer Security) protocols. HTTPS ensures that all data transmitted, including session tokens and other sensitive information, is encrypted and protected from unauthorized access.
+  On the other hand, when using HTTPS, the communication between the client and the server is
+  encrypted using SSL/TLS (Secure Socket Layer/Transport Layer Security) protocols. HTTPS ensures
+  that all data transmitted, including session tokens and other sensitive information, is encrypted
+  and protected from unauthorized access.
 
   When a client establishes an HTTPS connection with a server, the following occurs:
 
   1. The client and server perform an SSL/TLS handshake to establish a secure connection.
   2. The server sends its SSL/TLS certificate to the client for verification.
   3. The client verifies the server's certificate and generates a shared secret key.
-  4. The client and server use the shared secret key to encrypt and decrypt the data transmitted between them.
+  4. The client and server use the shared secret key to encrypt and decrypt the data transmitted
+     between them.
 
-  By using HTTPS, the session token and all other data exchanged between the client and server are encrypted, making it much more difficult for attackers to intercept and steal sensitive information.
+  By using HTTPS, the session token and all other data exchanged between the client and server are
+  encrypted, making it much more difficult for attackers to intercept and steal sensitive
+  information.
 
-  It's important to note that while HTTPS encrypts the communication channel, it does not encrypt the session token itself. The session token is still transmitted as plain text within the encrypted HTTPS connection. Therefore, it's crucial to use secure session management practices, such as generating random and unique session tokens, setting appropriate expiration times, and properly invalidating sessions when necessary.
+  It's important to note that while HTTPS encrypts the communication channel, it does not encrypt
+  the session token itself. The session token is still transmitted as plain text within the
+  encrypted HTTPS connection. Therefore, it's crucial to use secure session management practices,
+  such as generating random and unique session tokens, setting appropriate expiration times, and
+  properly invalidating sessions when necessary.
 
-  In summary, session tokens themselves are not typically encrypted, but it is essential to use HTTPS to encrypt the entire communication channel and protect the session token and other sensitive data from unauthorized access during transmission.
+  In summary, session tokens themselves are not typically encrypted, but it is essential to use
+  HTTPS to encrypt the entire communication channel and protect the session token and other
+  sensitive data from unauthorized access during transmission.
 
 #### Example of a cookie
-  A cookie is a small piece of data stored by a website on a user's browser. It consists of several components that define its properties and behavior. The structure of a cookie includes the following elements:
+  A cookie is a small piece of data stored by a website on a user's browser. It consists of several
+  components that define its properties and behavior. The structure of a cookie includes the
+  following elements:
 
   1. Name:
      - Every cookie has a unique name that identifies it.
-     - The name is a case-sensitive string that follows certain rules, such as not containing whitespace, semicolons, or commas.
+     - The name is a case-sensitive string that follows certain rules, such as not containing
+     whitespace, semicolons, or commas.
      - Example: `sessionToken`, `userId`, `preferences`.
 
   2. Value:
@@ -1194,43 +1332,59 @@
      - Example: `abc123`, `John`, `%7B%22theme%22%3A%22dark%22%7D` (URL-encoded JSON).
 
   3. Expiration/Max-Age:
-     - Cookies can have an expiration time or a maximum age that determines how long they should be stored by the browser.
-     - The expiration time is set using the `Expires` attribute, which specifies an absolute date and time.
-     - The maximum age is set using the `Max-Age` attribute, which specifies the number of seconds until the cookie expires.
-     - If neither `Expires` nor `Max-Age` is set, the cookie becomes a session cookie and is deleted when the browser is closed.
+     - Cookies can have an expiration time or a maximum age that determines how long they should be
+     stored by the browser.
+     - The expiration time is set using the `Expires` attribute, which specifies an absolute date
+     and time.
+     - The maximum age is set using the `Max-Age` attribute, which specifies the number of seconds
+     until the cookie expires.
+     - If neither `Expires` nor `Max-Age` is set, the cookie becomes a session cookie and is deleted
+     when the browser is closed.
      - Example: `Expires=Fri, 31 Dec 2023 23:59:59 GMT`, `Max-Age=3600` (1 hour).
 
   4. Domain:
      - The domain attribute specifies the domain or subdomain for which the cookie is valid.
-     - By default, a cookie is associated with the domain that set it and is sent back to that domain on subsequent requests.
-     - The domain can be set to a specific subdomain or a parent domain to allow the cookie to be accessed by multiple subdomains.
+     - By default, a cookie is associated with the domain that set it and is sent back to that
+     domain on subsequent requests.
+     - The domain can be set to a specific subdomain or a parent domain to allow the cookie to be
+     accessed by multiple subdomains.
      - Example: `Domain=example.com`, `Domain=subdomain.example.com`.
 
   5. Path:
      - The path attribute specifies the URL path for which the cookie is valid.
-     - By default, a cookie is associated with the path of the page that set it and is sent back to that path and its sub-paths on subsequent requests.
-     - The path can be set to a specific directory or a higher-level directory to limit or expand the scope of the cookie.
+     - By default, a cookie is associated with the path of the page that set it and is sent back to
+     that path and its sub-paths on subsequent requests.
+     - The path can be set to a specific directory or a higher-level directory to limit or expand
+     the scope of the cookie.
      - Example: `Path=/`, `Path=/subdirectory`.
 
   6. Secure:
-     - The `Secure` attribute is a boolean flag that indicates whether the cookie should only be transmitted over a secure HTTPS connection.
-     - When the `Secure` attribute is set, the cookie will not be sent over unencrypted HTTP connections.
+     - The `Secure` attribute is a boolean flag that indicates whether the cookie should only be
+     transmitted over a secure HTTPS connection.
+     - When the `Secure` attribute is set, the cookie will not be sent over unencrypted HTTP
+     connections.
      - Example: `Secure` (no value needed).
 
   7. HttpOnly:
-     - The `HttpOnly` attribute is a boolean flag that prevents client-side JavaScript from accessing the cookie.
-     - When the `HttpOnly` attribute is set, the cookie cannot be read or manipulated using JavaScript, providing an additional layer of security against cross-site scripting (XSS) attacks.
+     - The `HttpOnly` attribute is a boolean flag that prevents client-side JavaScript from
+     accessing the cookie.
+     - When the `HttpOnly` attribute is set, the cookie cannot be read or manipulated using
+     JavaScript, providing an additional layer of security against cross-site scripting (XSS)
+     attacks.
      - Example: `HttpOnly` (no value needed).
 
   Here's an example of a cookie string that includes various attributes:
 
   ```
-  sessionToken=abc123; Expires=Fri, 31 Dec 2023 23:59:59 GMT; Path=/; Domain=example.com; Secure; HttpOnly
+  sessionToken=abc123; Expires=Fri, 31 Dec 2023 23:59:59 GMT; Path=/; Domain=example.com; Secure;
+HttpOnly
   ```
 
-  In this example, the cookie has a name of `sessionToken`, a value of `abc123`, an expiration date, a path of `/`, a domain of `example.com`, and the `Secure` and `HttpOnly` flags set.
+  In this example, the cookie has a name of `sessionToken`, a value of `abc123`, an expiration date,
+  a path of `/`, a domain of `example.com`, and the `Secure` and `HttpOnly` flags set.
 
-  Cookies are set by the server using the `Set-Cookie` header in the HTTP response, and the browser includes the relevant cookies in subsequent requests to the server using the `Cookie` header.
+  Cookies are set by the server using the `Set-Cookie` header in the HTTP response, and the browser
+  includes the relevant cookies in subsequent requests to the server using the `Cookie` header.
 
 
 ## Test login function using postman
@@ -1250,7 +1404,8 @@
     {
       "authentication": {
           "password": "6b8c6c4019e50e04e6e09465adbd55ff308a44d6a21122fe34e0e4c33674db5e",
-          "salt": "nB7EVkFDKQAk41vYLm6ica9NclWnIM3/nWjKl2fNa64wuoadM+QZTJ/H8o0FpXtsUZ7w6bv0EAXkl+YTY/pc2ozCKyorsSiTTHBizwPPGt0VZMcgetoUPmM9IBddXB5jJIYuc6zg7A1LVnR1nzqnnIy15QgT6/0Qz3XWa/OQ/b4=",
+          "salt":
+        "nB7EVkFDKQAk41vYLm6ica9NclWnIM3/nWjKl2fNa64wuoadM+QZTJ/H8o0FpXtsUZ7w6bv0EAXkl+YTY/pc2ozCKyorsSiTTHBizwPPGt0VZMcgetoUPmM9IBddXB5jJIYuc6zg7A1LVnR1nzqnnIy15QgT6/0Qz3XWa/OQ/b4=",
           "sessionToken": "4ddae37af941848aa202069b35eab3befbef1b01a2a34ab8566c0759e65f7af1"
       },
       "_id": "674986122701fa467bfd7664",
@@ -1263,7 +1418,8 @@
 ## Create users route using our first middleware
   For windows user
   ```powershell
-  New-Item -ItemType Directory -Path src\middlewares -Force; New-Item -ItemType File -Path src\middlewares\index.ts
+  New-Item -ItemType Directory -Path src\middlewares -Force; New-Item -ItemType File -Path
+src\middlewares\index.ts
   ```
   For linux user
   ```sh
@@ -1323,22 +1479,32 @@
   };
   ```
 
-  The `next` function in Express is used to pass control to the next middleware function in the stack. In the context of your `isAuthenticated` middleware, it should be called when the user is successfully authenticated. This allows the request to proceed to the next middleware or route handler.
+  The `next` function in Express is used to pass control to the next middleware function in the
+  stack. In the context of your `isAuthenticated` middleware, it should be called when the user is
+  successfully authenticated. This allows the request to proceed to the next middleware or route
+  handler.
 
   Here’s how to use `next` in your `isAuthenticated` function:
 
-  1. After successfully retrieving and validating the user, call `next()` to pass control to the next middleware.
+  1. After successfully retrieving and validating the user, call `next()` to pass control to the
+     next middleware.
   2. Ensure that the `next` function is called only when authentication is successful.
 
 ### Key Points:
-  - **Control Flow**: Calling `next()` is essential for allowing the request to continue processing. If you don't call it, the request will hang, and the user won't receive a response.
-  - **Error Handling**: If an error occurs, you should still handle it appropriately (e.g., logging it and responding with an error status), as shown in your original code.
-  - **Middleware Stack**: The `isAuthenticated` middleware can be added to any route that needs authentication, ensuring that only authenticated users can access those routes.
+  - **Control Flow**: Calling `next()` is essential for allowing the request to continue processing.
+  If you don't call it, the request will hang, and the user won't receive a response.
+  - **Error Handling**: If an error occurs, you should still handle it appropriately (e.g., logging
+  it and responding with an error status), as shown in your original code.
+  - **Middleware Stack**: The `isAuthenticated` middleware can be added to any route that needs
+  authentication, ensuring that only authenticated users can access those routes.
 
-  The **"Cannot set headers after they are sent to the client"** error in Express occurs when you attempt to modify or send an HTTP response after it has already been sent to the client. This typically happens when:
+  The **"Cannot set headers after they are sent to the client"** error in Express occurs when you
+  attempt to modify or send an HTTP response after it has already been sent to the client. This
+  typically happens when:
 
   1. **You call `res.send`, `res.json`, or `res.end` multiple times for the same request.**
-  2. **You attempt to modify headers (`res.setHeader`, `res.status`) after a response is already sent.**
+  2. **You attempt to modify headers (`res.setHeader`, `res.status`) after a response is already
+     sent.**
 
   Here’s how to debug and fix the issue:
 
@@ -1364,7 +1530,8 @@
        };
        ```
 
-     - **Fix:** Ensure the middleware does not call `next()` or send multiple responses after one has already been sent.
+     - **Fix:** Ensure the middleware does not call `next()` or send multiple responses after one
+has already been sent.
 
        ```ts
        export const myMiddleware = async (req, res, next) => {
@@ -1382,7 +1549,8 @@
   ---
 
 #### **2. Check Controller Logic**
-     - If your controller sends a response but processing continues, it can lead to multiple responses being sent.
+     - If your controller sends a response but processing continues, it can lead to multiple
+responses being sent.
      - Example of problematic controller logic:
 
        ```ts
@@ -1405,7 +1573,8 @@
   ---
 
 #### **3. Avoid Duplicate `next()` Calls**
-     - Calling `next()` after sending a response can cause Express to continue processing the request, potentially invoking additional middlewares or route handlers.
+     - Calling `next()` after sending a response can cause Express to continue processing the
+request, potentially invoking additional middlewares or route handlers.
      - Example of a problematic middleware:
 
        ```ts
@@ -1427,7 +1596,8 @@
   ---
 
 #### **4. Check for Unhandled Promises**
-     - If an asynchronous function throws an error after a response has already been sent, it might trigger additional responses.
+     - If an asynchronous function throws an error after a response has already been sent, it might
+trigger additional responses.
      - Example of problematic code:
 
        ```ts
@@ -1471,12 +1641,14 @@
     ```
   - Check middleware and controller execution order to ensure no overlapping responses.
 
-  By carefully following these steps and analyzing your middleware and controllers, you can resolve the **"Cannot set headers after they are sent to the client"** error effectively.
+  By carefully following these steps and analyzing your middleware and controllers, you can resolve
+  the **"Cannot set headers after they are sent to the client"** error effectively.
 
 
 ## Create users route using our first middleware
   ```powershell
-  New-Item -ItemType Directory -Path src\controllers -Force; New-Item -ItemType File -Path src\controllers\user.ts
+  New-Item -ItemType Directory -Path src\controllers -Force; New-Item -ItemType File -Path
+src\controllers\user.ts
   ```
 
   ```sh
@@ -1564,7 +1736,8 @@
 
 ## create a new router
   ```powershell
-  New-Item -ItemType Directory -Path src\router -Force; New-Item -ItemType File -Path src\router\user.ts
+  New-Item -ItemType Directory -Path src\router -Force; New-Item -ItemType File -Path
+src\router\user.ts
   ```
 
   ```sh
@@ -1633,12 +1806,16 @@
 
 ### Explanation of the Folder Structure
 
-  This folder structure is common in **Node.js** applications written in **TypeScript**, organized using the **MVC (Model-View-Controller)** pattern and middleware architecture. Here’s what each folder represents:
+  This folder structure is common in **Node.js** applications written in **TypeScript**, organized
+  using the **MVC (Model-View-Controller)** pattern and middleware architecture. Here’s what each
+  folder represents:
 
   ---
 
 ### 1. **Controllers (`controllers/`)**
-  - **Purpose:** Controllers contain the logic for handling incoming requests and responding to clients. They act as intermediaries between the **router** and the **business logic** or **database interactions**.
+  - **Purpose:** Controllers contain the logic for handling incoming requests and responding to
+  clients. They act as intermediaries between the **router** and the **business logic** or
+  **database interactions**.
   - **Files:**
     - `authentication.ts`: Handles authentication-related logic (e.g., login, signup).
     - `user.ts`: Handles operations related to users (e.g., fetching user data, updating profiles).
@@ -1646,7 +1823,8 @@
   ---
 
 ### 2. **Router (`router/`)**
-  - **Purpose:** Routers define the application's API endpoints or routes. They map HTTP requests (e.g., `GET`, `POST`, `PUT`, `DELETE`) to specific **controller functions**.
+  - **Purpose:** Routers define the application's API endpoints or routes. They map HTTP requests
+  (e.g., `GET`, `POST`, `PUT`, `DELETE`) to specific **controller functions**.
   - **Files:**
     - `authentication.ts`: Defines routes for authentication (e.g., `/login`, `/register`).
     - `user.ts`: Defines routes for user-related operations (e.g., `/users`, `/users/:id`).
@@ -1655,14 +1833,18 @@
   ---
 
 ### 3. **Middlewares (`middlewares/`)**
-  - **Purpose:** Middleware functions process requests before they reach the controllers or after the response is sent. They are used for tasks like authentication, logging, error handling, or request validation.
+  - **Purpose:** Middleware functions process requests before they reach the controllers or after
+  the response is sent. They are used for tasks like authentication, logging, error handling, or
+  request validation.
   - **Files:**
-    - `index.ts`: Likely contains custom middleware logic (e.g., authentication check, request validation).
+    - `index.ts`: Likely contains custom middleware logic (e.g., authentication check, request
+    validation).
 
   ---
 
 ### 4. **Database (`db/`)**
-  - **Purpose:** This folder contains files that interact with the database. These files define database models, queries, or utility functions for data manipulation.
+  - **Purpose:** This folder contains files that interact with the database. These files define
+  database models, queries, or utility functions for data manipulation.
   - **Files:**
     - `users.ts`: Likely contains database schema or queries related to user data.
 
@@ -1670,7 +1852,8 @@
 
 ### Diagram Representation of Folder Interactions
 
-  Below is a visual representation of how these components interact in a typical **request-response cycle**:
+  Below is a visual representation of how these components interact in a typical **request-response
+  cycle**:
 
   ```mermaid
   graph TD
@@ -1689,9 +1872,12 @@
 
 ### Step-by-Step Workflow
   1. **Client Request:** A client sends an HTTP request to the server (e.g., `POST /login`).
-  2. **Router:** The request is routed to the appropriate **controller** based on the route definitions.
-  3. **Middleware:** Middleware processes the request (e.g., checks authentication, validates input).
-  4. **Controller:** The controller handles the logic (e.g., validates user credentials) and interacts with the **database** if necessary.
+  2. **Router:** The request is routed to the appropriate **controller** based on the route
+     definitions.
+  3. **Middleware:** Middleware processes the request (e.g., checks authentication, validates
+     input).
+  4. **Controller:** The controller handles the logic (e.g., validates user credentials) and
+     interacts with the **database** if necessary.
   5. **Database:** The database processes queries (e.g., fetch user data) and returns the results.
   6. **Response:** The controller processes the results and sends a response back to the client.
 
@@ -1699,14 +1885,16 @@
 
 ### Summary Table
 
-  | **Folder**        | **Purpose**                                                                 |
+  | **Folder**        | **Purpose**
+  |
   |--------------------|-----------------------------------------------------------------------------|
   | `controllers/`     | Handles request logic and interacts with the database                     |
   | `router/`          | Defines API endpoints and maps them to controllers                        |
   | `middlewares/`     | Processes requests (e.g., authentication, validation) before controllers  |
   | `db/`              | Handles database interactions (e.g., queries, schema definitions)         |
 
-  This structure ensures a clean separation of concerns, making the application modular, scalable, and maintainable.
+  This structure ensures a clean separation of concerns, making the application modular, scalable,
+  and maintainable.
 
 ## Test the login with the user get function
 
@@ -1746,7 +1934,9 @@
   ]
   ```
 
-  Noted that if you remove the authentication cookies you can still get all the user information. Therefore we want to change that and protect our user valuable information. We have to go back to our router index (src/router/user.ts)
+  Noted that if you remove the authentication cookies you can still get all the user information.
+  Therefore we want to change that and protect our user valuable information. We have to go back to
+  our router index (src/router/user.ts)
 
   ```ts
   //import express from 'express';
@@ -1825,7 +2015,8 @@
   }
   ```
   However, this allow other user to delete another user
-  Therefore, we need to create another middleware checking wheather the delete request the owner of the account.
+  Therefore, we need to create another middleware checking wheather the delete request the owner of
+  the account.
 
   update src/middlewards/index.ts
   ```ts
@@ -1844,7 +2035,8 @@
       try {
           //check for the id parameters
           const { id } = req.params;
-          const currentUserId = get(req, 'identity._id') as string; // tell typescript it is a string
+          const currentUserId = get(req, 'identity._id') as string; // tell typescript it is a
+string
 
 
           if(!currentUserId){
@@ -1884,36 +2076,45 @@
 
   ```
   Some notes:
-  If you're implementing **session-based login** instead of **JWT**, the workflow for managing user authentication and authorization changes quite a bit. Here's how the `isOwner` function and the general flow would look when using **sessions**:
+  If you're implementing **session-based login** instead of **JWT**, the workflow for managing user
+  authentication and authorization changes quite a bit. Here's how the `isOwner` function and the
+  general flow would look when using **sessions**:
 
-  The merge function in isAuthenticated function will check whether the cookies in the session is authenticated and merge the identity to the request and pass on the next function
+  The merge function in isAuthenticated function will check whether the cookies in the session is
+  authenticated and merge the identity to the request and pass on the next function
 
   ---
 
 ### **1. How Session-Based Authentication Works**
 
-  Session-based authentication relies on the server maintaining user session information, typically stored in memory, a database, or a session store like **Redis**. Here's the flow:
+  Session-based authentication relies on the server maintaining user session information, typically
+  stored in memory, a database, or a session store like **Redis**. Here's the flow:
 
   1. **User Logs In**:
      - The user provides credentials (e.g., email and password).
      - The server verifies the credentials against the database.
-     - If valid, the server creates a **session** for the user and stores it (usually in a session store).
+     - If valid, the server creates a **session** for the user and stores it (usually in a session
+     store).
      - The session ID is sent back to the client as a cookie.
 
   2. **Client Sends Requests**:
-     - For subsequent requests, the client automatically includes the session cookie in the `Cookie` header.
+     - For subsequent requests, the client automatically includes the session cookie in the `Cookie`
+     header.
 
   3. **Server Verifies Session**:
-     - Middleware (e.g., `express-session`) reads the session cookie, retrieves the session data from the session store, and makes it available in `req.session`.
+     - Middleware (e.g., `express-session`) reads the session cookie, retrieves the session data
+     from the session store, and makes it available in `req.session`.
 
   4. **Authorization Logic**:
-     - The user's session data (e.g., `userId`) is used to check permissions for accessing or modifying resources.
+     - The user's session data (e.g., `userId`) is used to check permissions for accessing or
+     modifying resources.
 
   ---
 
 ### **2. Accessing Session Data in `isOwner`**
 
-  When using sessions, the `identity` information (like `currentUserId`) is stored in the session and can be accessed via `req.session`.
+  When using sessions, the `identity` information (like `currentUserId`) is stored in the session
+  and can be accessed via `req.session`.
 
   Here’s how you can implement `isOwner` with session-based authentication:
 
@@ -1959,7 +2160,8 @@
 
 ### **3. Setting Up Session Middleware**
 
-  To use session-based authentication, you'll need to configure a session middleware, such as `express-session`. Here's how you can set it up:
+  To use session-based authentication, you'll need to configure a session middleware, such as
+  `express-session`. Here's how you can set it up:
 
 #### Install Required Packages:
 
@@ -2016,7 +2218,8 @@
 
 ### **4. Logging In with Sessions**
 
-  When a user logs in, you’ll create a session and store the user’s information (like `userId`) in `req.session`.
+  When a user logs in, you’ll create a session and store the user’s information (like `userId`) in
+  `req.session`.
 
 #### Example Login Route:
 
@@ -2187,13 +2390,21 @@
 
      Again, the `router` parameter in this function is a reference to the same `router` object.
 
-  So, when you modify the `router` object inside the functions in `authentication.ts` or `user.ts`, you are actually modifying the same `router` object that was created in `index.ts`. Any changes made to the `router` object in one module will be reflected in the other modules since they all share the same reference to the `router` object.
+  So, when you modify the `router` object inside the functions in `authentication.ts` or `user.ts`,
+  you are actually modifying the same `router` object that was created in `index.ts`. Any changes
+  made to the `router` object in one module will be reflected in the other modules since they all
+  share the same reference to the `router` object.
 
-  This behavior allows you to define routes and middleware on the same `router` instance across different modules, making it easier to organize and modularize your Express application.
+  This behavior allows you to define routes and middleware on the same `router` instance across
+  different modules, making it easier to organize and modularize your Express application.
 
-  It's important to note that passing objects by reference can have implications if you modify the object in one module and expect it to remain unchanged in other modules. However, in the case of defining routes and middleware on the `router` object, it is a common and expected pattern in Express applications.
+  It's important to note that passing objects by reference can have implications if you modify the
+  object in one module and expect it to remain unchanged in other modules. However, in the case of
+  defining routes and middleware on the `router` object, it is a common and expected pattern in
+  Express applications.
 
-  Here's a diagram created using Mermaid to illustrate how the `router` object is passed by reference to `user.ts` and `authentication.ts`:
+  Here's a diagram created using Mermaid to illustrate how the `router` object is passed by
+  reference to `user.ts` and `authentication.ts`:
 
   ```mermaid
   graph LR
@@ -2208,15 +2419,23 @@
 
   1. In `index.ts`, an instance of `express.Router` called `router` is created.
 
-  2. The reference to the `router` object is passed as an argument to the functions in `authentication.ts` and `user.ts`.
+  2. The reference to the `router` object is passed as an argument to the functions in
+     `authentication.ts` and `user.ts`.
 
-  3. Inside `authentication.ts`, the `router` parameter receives the reference to the same `router` object created in `index.ts`. Any modifications made to `router` in this module will affect the original `router` object.
+  3. Inside `authentication.ts`, the `router` parameter receives the reference to the same `router`
+     object created in `index.ts`. Any modifications made to `router` in this module will affect the
+  original `router` object.
 
-  4. Similarly, inside `user.ts`, the `router` parameter also receives the reference to the same `router` object. Modifications made to `router` in this module will also affect the original `router` object.
+  4. Similarly, inside `user.ts`, the `router` parameter also receives the reference to the same
+     `router` object. Modifications made to `router` in this module will also affect the original
+  `router` object.
 
-  The diagram shows that both `authentication.ts` and `user.ts` receive a reference to the same `router` object, and any modifications made to `router` in these modules will be reflected in the original `router` object created in `index.ts`.
+  The diagram shows that both `authentication.ts` and `user.ts` receive a reference to the same
+  `router` object, and any modifications made to `router` in these modules will be reflected in the
+  original `router` object created in `index.ts`.
 
-  This allows you to define routes and middleware on the same `router` instance across different modules, enabling modularization and code organization in your Express application.
+  This allows you to define routes and middleware on the same `router` instance across different
+  modules, enabling modularization and code organization in your Express application.
 
 ## Create the update controller
 
