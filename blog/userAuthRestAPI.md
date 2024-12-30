@@ -2203,7 +2203,8 @@ graph LR
     B -- modifies --> R
     C -- modifies --> R
 ```
-!["Folder Structure Diagram"](howExpressRouterAreModified.png?raw=true )
+!["Folder Structure Diagram"](howExpressRouterAreModified.png?raw=true)
+
 Explanation:
 
 1. In `index.ts`, an instance of `express.Router` called `router` is created.
@@ -2263,4 +2264,4 @@ export default (router: express.Router)=>{
 
 # Reference:
 Vid: 
-https://youtu.be/b8ZUb_Okxro?feature=shared&t=1925
+https://youtu.be/b8ZUb_Okxro
