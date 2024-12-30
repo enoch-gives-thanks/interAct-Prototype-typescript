@@ -1,5 +1,5 @@
 import express from 'express';
-import {getUsers, deleteUserById} from '../db/users';
+import {getUsers, deleteUserById, updateUserById, getUserById} from '../db/users';
 
 export const getAllUsers = async (
     req: express.Request, 
@@ -30,3 +30,25 @@ export const deleteUserController = async (
   }
 }
 
+export const updateUserController = async (
+  req: express.Request,
+  res: express.Response
+): Promise<any> => {
+  try{
+    const { id } = req.params;
+    const { username } = req.body;
+    if(!username) {
+      return res.sendStatus(400);
+    }
+    const user = await getUserById(id);
+    user.username = username;
+    await user.save();
+    res.status(201).json({ user }).end();
+
+    return;
+
+  }catch (error){
+    console.log(error);
+    res.sendStatus(400);
+  }
+}

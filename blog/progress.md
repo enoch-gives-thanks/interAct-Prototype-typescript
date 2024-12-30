@@ -1884,6 +1884,8 @@ Finally, update the user.ts in router folder /src/router/user.ts
 Some notes:
 If you're implementing **session-based login** instead of **JWT**, the workflow for managing user authentication and authorization changes quite a bit. Here's how the `isOwner` function and the general flow would look when using **sessions**:
 
+The merge function in isAuthenticated function will check whether the cookies in the session is authenticated and merge the identity to the request and pass on the next function
+
 ---
 
 ### **1. How Session-Based Authentication Works**
@@ -2140,3 +2142,119 @@ export const isOwner = async (
 - The `isOwner` function compares the `userId` from the session with the resource ID (`req.params.id`) to confirm ownership.
 - Database verification is optional and depends on your application's security requirements. Query the database if you need to verify user roles, permissions, or status.
 
+## Quick summary 
+
+The `router` object is passed by reference to both `user.ts` and `authentication.ts`.
+
+In JavaScript and TypeScript, objects, including instances of `express.Router`, are passed by reference. When you pass an object as an argument to a function, you are actually passing a reference to that object, not a copy of the object itself.
+
+Let's take a closer look at how the `router` object is passed:
+
+1. In `index.ts`, you create an instance of `express.Router` called `router`:
+
+   ```typescript
+   const router = express.Router();
+   ```
+
+2. In the exported function in `index.ts`, you pass the `router` object as an argument to both `authentication` and `users` functions:
+
+   ```typescript
+   authentication(router);
+   users(router);
+   ```
+
+   Here, you are passing the reference to the `router` object to these functions.
+
+3. In `authentication.ts`, the exported function receives the `router` object as a parameter:
+
+   ```typescript
+   export default (router: express.Router) => {
+     // ...
+   }
+   ```
+
+   The `router` parameter in this function is a reference to the same `router` object created in `index.ts`.
+
+4. Similarly, in `user.ts`, the exported function also receives the `router` object as a parameter:
+
+   ```typescript
+   export default (router: express.Router) => {
+     // ...
+   }
+   ```
+
+   Again, the `router` parameter in this function is a reference to the same `router` object.
+
+So, when you modify the `router` object inside the functions in `authentication.ts` or `user.ts`, you are actually modifying the same `router` object that was created in `index.ts`. Any changes made to the `router` object in one module will be reflected in the other modules since they all share the same reference to the `router` object.
+
+This behavior allows you to define routes and middleware on the same `router` instance across different modules, making it easier to organize and modularize your Express application.
+
+It's important to note that passing objects by reference can have implications if you modify the object in one module and expect it to remain unchanged in other modules. However, in the case of defining routes and middleware on the `router` object, it is a common and expected pattern in Express applications.
+
+Here's a diagram created using Mermaid to illustrate how the `router` object is passed by reference to `user.ts` and `authentication.ts`:
+
+```mermaid
+graph LR
+    A[index.ts] -- creates --> R[router: express.Router]
+    A -- passes reference --> B[authentication.ts]
+    A -- passes reference --> C[user.ts]
+    B -- modifies --> R
+    C -- modifies --> R
+```
+!["Folder Structure Diagram"](howExpressRouterAreModified.png?raw=true )
+Explanation:
+
+1. In `index.ts`, an instance of `express.Router` called `router` is created.
+
+2. The reference to the `router` object is passed as an argument to the functions in `authentication.ts` and `user.ts`.
+
+3. Inside `authentication.ts`, the `router` parameter receives the reference to the same `router` object created in `index.ts`. Any modifications made to `router` in this module will affect the original `router` object.
+
+4. Similarly, inside `user.ts`, the `router` parameter also receives the reference to the same `router` object. Modifications made to `router` in this module will also affect the original `router` object.
+
+The diagram shows that both `authentication.ts` and `user.ts` receive a reference to the same `router` object, and any modifications made to `router` in these modules will be reflected in the original `router` object created in `index.ts`.
+
+This allows you to define routes and middleware on the same `router` instance across different modules, enabling modularization and code organization in your Express application.
+
+## Create the update controller
+
+We will create an controller in src/controllers/authentication.ts
+
+```ts
+// ...
+export const updateUserController = async (
+  req: express.Request,
+  res: express.Response
+): Promise<any> => {
+  try{
+    const { id } = req.params;
+    const { username } = req.body;
+    if(!username) {
+      return res.sendStatus(400);
+    }
+    const user = await getUserById(id);
+    user.username = username;
+    await user.save();
+    res.status(201).json({ user }).end();
+    return;
+
+  }catch (error){
+    console.log(error);
+    res.sendStatus(400);
+  }
+}
+```
+We then add the controller to router in src/controllers/authentication.ts
+
+```ts
+//import express from 'express';
+//import {deleteUserController, getAllUsers, 
+    updateUserController
+//} from '../controllers/user';
+//import { isAuthenticated, isOwner } from '../middlewares';
+export default (router: express.Router)=>{
+  //router.get('/users', isAuthenticated ,getAllUsers);
+  //router.delete('/users/:id', isAuthenticated, isOwner, deleteUserController);
+  router.patch('/users/:id', isAuthenticated, isOwner, updateUserController);
+}
+```
