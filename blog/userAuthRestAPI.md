@@ -1,5 +1,5 @@
-# Steps:
-## Configure
+# Steps on how to build a user Authentication server via nodejs typescript:
+## installation
 ### install typescript and nodemon
   ```sh
   pnpm init
@@ -2406,16 +2406,19 @@ string
   Here's a diagram created using Mermaid to illustrate how the `router` object is passed by
   reference to `user.ts` and `authentication.ts`:
 
-  ```mermaid
-  graph LR
-      A[index.ts] -- creates --> R[router: express.Router]
-      A -- passes reference --> B[authentication.ts]
-      A -- passes reference --> C[user.ts]
-      B -- modifies --> R
-      C -- modifies --> R
-  ```
-  !["Folder Structure Diagram"](howExpressRouterAreModified.png?raw=true )
-  Explanation:
+
+```mermaid
+graph LR
+    A[index.ts] -- creates --> R[router: express.Router]
+    A -- passes reference --> B[authentication.ts]
+    A -- passes reference --> C[user.ts]
+    B -- modifies --> R
+    C -- modifies --> R
+```
+!["Folder Structure Diagram"](howExpressRouterAreModified.png?raw=true)
+
+Explanation:
+
 
   1. In `index.ts`, an instance of `express.Router` called `router` is created.
 
@@ -2481,5 +2484,7 @@ string
   ```
 
 # Reference:
-  Vid:
-  https://youtu.be/b8ZUb_Okxro?feature=shared&t=1925
+
+Vid: 
+https://youtu.be/b8ZUb_Okxro
+
